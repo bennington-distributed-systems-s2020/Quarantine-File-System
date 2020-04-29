@@ -1,1 +1,1 @@
-# GFS
+# Quarantine File System (QFS)
