@@ -5,6 +5,7 @@
 
 import json
 import subprocess
+import time
 
 config_file = 'master.json'
 
@@ -13,10 +14,9 @@ def run_server():
         config = json.load(cfg)
         workers = config['workers']
         # popen is done with fork so no zombie processes
-        subprocess.Popen([
-            "gunicorn", "-w", repr(workers), "-b", "0.0.0.0:8000", "gunicorn:app"
-            ])
-        exit(0)
+        process = subprocess.Popen(["gunicorn", "-w", repr(workers), "-b", "0.0.0.0:8000", "main:app"])
+        while True:
+            time.sleep(1000)
 
 if __name__ == '__main__':
     run_server()
