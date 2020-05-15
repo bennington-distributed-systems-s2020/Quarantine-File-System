@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-    metadata.py - Metadata Store object that holds th:xe information mapping files to chunks.
+    metadata.py - Provides a functionality to update metadata records
     Date: 5/12/2020
 """
 
