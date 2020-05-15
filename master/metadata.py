@@ -1,14 +1,13 @@
+#!/usr/bin/env python3
 """
- store.py - Metadata Store object that holds th:xe information
-            mapping files to chunks.
- Author: Five Grant (fivegrant@bennington.edu)
- Date: 5/12/2020
+    metadata.py - Provides a functionality to update metadata records
+    Date: 5/12/2020
 """
 
 import os.path
 from filemap import FileMap
 
-class MetadataStore:
+class Metadata:
     def __init__(self, logfile):
         self.logfile = logfile
          # WAITING FOR THE LOG OPERATIONS TO BE FLESHED OUT 
@@ -44,7 +43,7 @@ class MetadataStore:
         return chunkserver
 
     # This function restores the state of the Metadata store from the log file
-    def restore(self):
+    def recover(self):
         # Restore the state if log file exists
         if os.path.exist(self.logfile):
             with open(self.logfile, "w+") as logfile:
@@ -63,5 +62,11 @@ class MetadataStore:
                         self.store = FileMap(capture)
         else:
             return FileMap()
+
+    def write_to_log(self):
+        pass
+    
+    def create_checkpoint(self):
+        pass
 
                 
