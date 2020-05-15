@@ -1,6 +1,6 @@
 ## Current Structure
 
-- `main.py` - As the name suggests, it is the main script of GFS Master. Anything going in and out of Master happens here first and only then gets delegated further to other scripts.
+- `main.py` - As the name suggests, it is the main script of GFS Master. Provides a Flask API - anything going in and out of Master happens here first and only then gets delegated further to other scripts.
 
 - `metadata.py` - Provides a functionality to update metadata records using the `Metadata` class
 
