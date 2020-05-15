@@ -5,6 +5,7 @@
 """
 
 from flask import Flask
+from metadata import Metadata
 
 app = Flask(__name__)
 
