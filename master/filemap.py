@@ -1,4 +1,8 @@
-# provide structure for 
+#!/usr/bin/env python3
+"""
+    filemap.py - Provides a structure for navigating namespaces and mapping files to chunks
+    Date: 5/12/2020
+"""
 
 class Filemap:
     def __init__(self, state = {}):

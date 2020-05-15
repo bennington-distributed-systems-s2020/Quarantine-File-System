@@ -1,14 +1,11 @@
+#!/usr/bin/env python3
 """
- store.py - Metadata Store object that holds th:xe information
-            mapping files to chunks.
- Author: Five Grant (fivegrant@bennington.edu)
- Date: 5/12/2020
+    metadata.py - Metadata Store object that holds th:xe information mapping files to chunks.
+    Date: 5/12/2020
 """
 
 import os.path
 from filemap import FileMap
-
-# provide all functionality
 
 class Metadata:
     def __init__(self, logfile):
