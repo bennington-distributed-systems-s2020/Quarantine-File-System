@@ -46,7 +46,7 @@ class Metadata:
         return chunkserver
 
     # This function restores the state of the Metadata store from the log file
-    def restore(self):
+    def recover(self):
         # Restore the state if log file exists
         if os.path.exist(self.logfile):
             with open(self.logfile, "w+") as logfile:
@@ -65,5 +65,11 @@ class Metadata:
                         self.store = FileMap(capture)
         else:
             return FileMap()
+
+    def write_to_log(self):
+        pass
+    
+    def create_checkpoint(self):
+        pass
 
                 
