@@ -1,7 +1,6 @@
-filename -> chunkhandle, size, lease
-chunkhandle -> chunkservers
+# provide structure for 
 
-class FileMap:
+class Filemap:
     def __init__(self, state = {}):
         self.files = {} if not state else state["files"]
         self.chunkhandle_map = {} if not state else ["chunkhandle"]

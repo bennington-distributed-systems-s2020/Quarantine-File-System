@@ -8,7 +8,9 @@
 import os.path
 from filemap import FileMap
 
-class MetadataStore:
+# provide all functionality
+
+class Metadata:
     def __init__(self, logfile):
         self.logfile = logfile
          # WAITING FOR THE LOG OPERATIONS TO BE FLESHED OUT 
