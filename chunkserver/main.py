@@ -39,7 +39,6 @@ def chunk_inventory():
         abort(500)
 
 @app.route("/collect-garbage/", strict_slashes=False, methods=['POST'])
-
 def collect_garbage():
     request_json = request.get_json()
     try:
