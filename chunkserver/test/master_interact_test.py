@@ -5,6 +5,8 @@ import json
 
 import time
 
+#locations are still hard-coded. I will work on changing that when neccessary
+
 class TestServer(unittest.TestCase):
     def test_live(self):
         r = requests.get('http://0.0.0.0:5000')

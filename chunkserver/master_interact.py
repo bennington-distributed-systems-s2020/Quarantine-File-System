@@ -2,8 +2,10 @@
 #with the master
 #Quang Tran - 05/16/2020
 
-import os, datetime, random, math
-from config import *
+import os, datetime, random, math, json
+
+with open("config.json") as config_json:
+    config = json.load(config_json)
 
 def lease(chunk_handle: str):
     """
@@ -14,7 +16,7 @@ def lease(chunk_handle: str):
     the lease expired
     """
     try:
-        with open('./chunk/' + chunk_handle + '.chunk', 'rb+') as f:
+        with open(config["CHUNK_PATH"] + chunk_handle + '.chunk', 'rb+') as f:
             #check if the chunk has a lease. If yes, check if it has expired.
             f.seek(1)
             if f.read(1) == '0':
@@ -39,7 +41,7 @@ def lease(chunk_handle: str):
                     lease_time = datetime.timedelta(hours = int(time[0:2]),
                                                     minutes = int(time[2:4]),
                                                     seconds = int(time[4:6]))
-                    if (curr_time - lease_time).total_seconds() > LEASE_EXPIRE_SECONDS:
+                    if (curr_time - lease_time).total_seconds() > config["LEASE_EXPIRE_SECONDS"]:
                         f.seek(1)
                         f.write(b'0')
                         return False
@@ -64,15 +66,15 @@ def chunk_inventory():
     """
     try:
         #get the number of files to return
-        no_files = math.ceil(CHUNK_INVENTORY_RANDOM_SELECT * len(os.listdir('./chunk/')))
+        no_files = math.ceil(config["CHUNK_INVENTORY_RANDOM_SELECT"] * len(os.listdir(config["CHUNK_PATH"])))
         #get the list of files to get information
         #https://pynative.com/python-random-sample/
-        chunks_list = random.sample(os.listdir('./chunk/'), no_files)
+        chunks_list = random.sample(os.listdir(config["CHUNK_PATH"]), no_files)
 
         chunk_inventory = {}
 
         for chunk in chunks_list:
-            f = open('./chunk/' + chunk, 'rb')
+            f = open(config["CHUNK_PATH"] + chunk, 'rb')
             information = {'chunk_handle': '', 'mutating': '', 'lease': ''}
 
             chunk_handle = chunk.split('.')[0]
