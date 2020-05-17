@@ -1,6 +1,10 @@
 from flask import Flask
-#from flask import request
+from flask import request
+from flask import Response
+from flask import json
 #from werkzeug.utils import secure_filename
+
+import master_interact
 
 app = Flask(__name__)
 
@@ -13,12 +17,22 @@ def create():
 	abort(501)
 	return ""
 
-@app.route("/lease")
+@app.route("/lease", strict_slashes=False, methods=['POST'])
 def lease():
-	abort(501)
-	return ""
+    try:
+        return json.dumps(master_interact.lease(request.form['chunk_handle']))
+    except (KeyError, IOError) as e:
+        return Response("400 Bad Request. chunk_handle not found. Exception:\n" + str(e), status=400)
+    except Exception as e:
+        raise e
+        return Response("Server Error. Exception:\n" + str(e), status=500)
 
-@app.route("/collect-garbage/", methods=['GET','POST'])
+@app.route("/chunk-inventory/", methods=['GET'])
+def chunk_inventory():
+    abort(501)
+    return ""
+
+@app.route("/collect-garbage/", methods=['POST'])
 def collect_garbage():
 	abort(501)
 	if request.method == 'POST':
