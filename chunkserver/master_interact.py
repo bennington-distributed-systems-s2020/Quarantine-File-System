@@ -2,7 +2,7 @@
 #with the master
 #Quang Tran - 05/16/2020
 
-import datetime
+import os, datetime, random, math
 from config import *
 
 def lease(chunk_handle: str):
@@ -49,3 +49,56 @@ def lease(chunk_handle: str):
     except Exception as e:
         raise e
 
+def chunk_inventory():
+    """
+    Returns a dict containing information on a random subset of chunks on the chunkserver.
+    The amount of chunks returned on random is determined based on the constant
+    CHUNK_INVENTORY_RANDOM_SELECT * number of chunks
+
+    Key: chunk_handle
+    Value: dict
+        Key: "chunk_handle" Value: chunk_handle
+        Key: "mutating" Value: mutating (whether the file is being mutated)
+        Key: "lease" Value: lease_timestamp (timestamp of the last timestamp
+            the chunk has a lease. ISO 8601 format: "2010-04-20T20:08:21.634121")
+    """
+    try:
+        #get the number of files to return
+        no_files = math.ceil(CHUNK_INVENTORY_RANDOM_SELECT * len(os.listdir('./chunk/')))
+        #get the list of files to get information
+        #https://pynative.com/python-random-sample/
+        chunks_list = random.sample(os.listdir('./chunk/'), no_files)
+
+        chunk_inventory = {}
+
+        for chunk in chunks_list:
+            f = open('./chunk/' + chunk, 'rb')
+            information = {'chunk_handle': '', 'mutating': '', 'lease': ''}
+
+            chunk_handle = chunk.split('.')[0]
+            information['chunk_handle'] = chunk_handle
+
+            f.seek(0)
+            if f.read(1) == '1':
+                information['mutating'] = True
+            else:
+                information['mutating'] = False
+
+            f.seek(2)
+            lease_time = datetime.datetime(int(float(f.read(4))), #year
+                                           int(float(f.read(2))), #month
+                                           int(float(f.read(2))), #date
+                                           int(float(f.read(2))), #hour
+                                           int(float(f.read(2))), #minute
+                                           int(float(f.read(2)))) #second
+            #https://www.w3docs.com/snippets/javascript/the-right-json-date-format.html
+            #https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
+            information['lease'] = lease_time.isoformat() + 'Z'
+
+            chunk_inventory[chunk_handle] = information
+
+        return chunk_inventory
+
+
+    except Exception as e:
+        raise e

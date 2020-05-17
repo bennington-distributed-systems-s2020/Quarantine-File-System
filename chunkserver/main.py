@@ -24,13 +24,15 @@ def lease():
     except (KeyError, IOError) as e:
         return Response("400 Bad Request. chunk_handle not found. Exception:\n" + str(e), status=400)
     except Exception as e:
-        raise e
         return Response("Server Error. Exception:\n" + str(e), status=500)
 
-@app.route("/chunk-inventory/", methods=['GET'])
+@app.route("/chunk-inventory/", methods=['GET', 'POST'])
 def chunk_inventory():
-    abort(501)
-    return ""
+    try:
+        return json.dumps(master_interact.chunk_inventory())
+    except Exception as e:
+        raise(e)
+        return Response("Server Error. Exception:\n" + str(e), status=500)
 
 @app.route("/collect-garbage/", methods=['POST'])
 def collect_garbage():
