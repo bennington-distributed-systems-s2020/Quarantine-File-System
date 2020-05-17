@@ -2,12 +2,12 @@
 #with the master
 #Quang Tran - 05/16/2020
 
-import os, datetime, random, math, json
+import os, datetime, random, math, json, logging
 
 with open("config.json") as config_json:
     config = json.load(config_json)
 
-def lease(chunk_handle: str):
+def lease(chunk_handle: str) -> bool:
     """
     Check whether the corresponding chunk_handle has a lease
     chunk_handle: str: A hexstring of the chunk_handle
@@ -51,7 +51,7 @@ def lease(chunk_handle: str):
     except Exception as e:
         raise e
 
-def chunk_inventory():
+def chunk_inventory() -> dict:
     """
     Returns a dict containing information on a random subset of chunks on the chunkserver.
     The amount of chunks returned on random is determined based on the constant
@@ -104,3 +104,13 @@ def chunk_inventory():
 
     except Exception as e:
         raise e
+
+def collect_garbage(deleted_chunks: list) -> bool:
+    for chunk_handle in deleted_chunks:
+        try:
+            os.remove(config["CHUNK_PATH"] + chunk_handle + ".chunk")
+        except Exception as e:
+            logging.warning("OSError: {0} {1}".format(e.filename, e.strerror))
+            raise e
+
+    return True

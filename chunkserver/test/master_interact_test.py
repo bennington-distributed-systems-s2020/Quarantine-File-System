@@ -3,7 +3,7 @@ import unittest
 import requests
 import json
 
-import time
+import time, os
 
 #locations are still hard-coded. I will work on changing that when neccessary
 
@@ -35,12 +35,12 @@ class TestLease(unittest.TestCase):
         self.test_chunk.write(self.no_lease)
         self.test_chunk.close()
 
-        r = requests.post('http://0.0.0.0:5000/lease', data={'chunk_handle': self.test_string})
+        r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
         self.assertEqual(r.text, 'false')
 
     def test_lease_400(self):
-        r = requests.post('http://0.0.0.0:5000/lease', data={'chunk_handle': self.false_string})
+        r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.false_string})
         self.assertTrue(r.status_code == 400)
 
     def test_lease_big_date(self):
@@ -50,7 +50,7 @@ class TestLease(unittest.TestCase):
         self.test_chunk.write(self.big_date)
         self.test_chunk.close()
 
-        r = requests.post('http://0.0.0.0:5000/lease', data={'chunk_handle': self.test_string})
+        r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
         self.assertEqual(r.text, 'false')
 
@@ -61,7 +61,7 @@ class TestLease(unittest.TestCase):
         self.test_chunk.write(self.big_time)
         self.test_chunk.close()
 
-        r = requests.post('http://0.0.0.0:5000/lease', data={'chunk_handle': self.test_string})
+        r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
         self.assertEqual(r.text, 'false')
 
@@ -72,7 +72,7 @@ class TestLease(unittest.TestCase):
         self.test_chunk.write(self.true_lease)
         self.test_chunk.close()
 
-        r = requests.post('http://0.0.0.0:5000/lease', data={'chunk_handle': self.test_string})
+        r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
         self.assertEqual(r.text, 'false')
 
@@ -105,6 +105,34 @@ class testChunkInventory(unittest.TestCase):
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.close()
+
+#almost copy-pasted one-to-one from chunk invent
+class testGarbageCollection(unittest.TestCase):
+    def setUp(self):
+        self.test_string = '0123'
+        self.test_string2 = '0456'
+        self.test_data = b'0020200516210900'
+
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'wb')
+        self.test_chunk.seek(0)
+        self.test_chunk.truncate(0)
+        self.test_chunk.write(self.test_data)
+        self.test_chunk.close()
+
+        self.test_chunk = open('../chunk/' + self.test_string2 + '.chunk', 'wb')
+        self.test_chunk.seek(0)
+        self.test_chunk.truncate(0)
+        self.test_chunk.write(self.test_data)
+        self.test_chunk.close()
+
+    def test_collect_garbage(self):
+        r = requests.post('http://0.0.0.0:5000/collect-garbage', json={'deleted_chunks': [self.test_string, self.test_string2]})
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(os.path.exists('../chunk/' + self.test_string + '.chunk'))
+        self.assertFalse(os.path.exists('../chunk/' + self.test_string2 + '.chunk'))
+
+    def tearDown(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
