@@ -13,13 +13,13 @@ class TestServer(unittest.TestCase):
 
 class TestLease(unittest.TestCase):
     def setUp(self):
-        self.test_chunk = open('../chunk/0123.chunk', 'rb+')
+        self.test_string = '-1'
+        self.false_string = '-2'
+
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.close()
-
-        self.test_string = '0123'
-        self.false_string = '9999'
 
         self.no_lease = b'0020200516210900'
         self.big_date = b'0120190516210900'
@@ -27,7 +27,7 @@ class TestLease(unittest.TestCase):
         self.true_lease = b'0120200516212020'
 
     def test_lease_false(self):
-        self.test_chunk = open('../chunk/0123.chunk', 'rb+')
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.no_lease)
@@ -42,7 +42,7 @@ class TestLease(unittest.TestCase):
         self.assertTrue(r.status_code == 400)
 
     def test_lease_big_date(self):
-        self.test_chunk = open('../chunk/0123.chunk', 'rb+')
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.big_date)
@@ -53,7 +53,7 @@ class TestLease(unittest.TestCase):
         self.assertEqual(r.text, 'false')
 
     def test_lease_big_time(self):
-        self.test_chunk = open('../chunk/0123.chunk', 'rb+')
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.big_time)
@@ -64,7 +64,7 @@ class TestLease(unittest.TestCase):
         self.assertEqual(r.text, 'false')
 
     def test_lease_true(self):
-        self.test_chunk = open('../chunk/0123.chunk', 'rb+')
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.true_lease)
@@ -75,7 +75,31 @@ class TestLease(unittest.TestCase):
         self.assertEqual(r.text, 'false')
 
     def tearDown(self):
-        self.test_chunk = open('../chunk/0123.chunk', 'rb+')
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk.seek(0)
+        self.test_chunk.truncate(0)
+        self.test_chunk.close()
+
+#simple chunk invent endpoint testing
+#it's too much work to write a consistent random sample then cross check everything returned
+#probably easier to just check it functions then check the content individually
+class testChunkInventory(unittest.TestCase):
+    def setUp(self):
+        self.test_string = '-1'
+        self.test_data = b'0020200516210900'
+
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk.seek(0)
+        self.test_chunk.truncate(0)
+        self.test_chunk.write(self.test_data)
+        self.test_chunk.close()
+
+    def test_chunk_inventory(self):
+        r = requests.post('http://0.0.0.0:5000/chunk-inventory')
+        self.assertEqual(r.status_code, 200)
+
+    def tearDown(self):
+        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.close()
