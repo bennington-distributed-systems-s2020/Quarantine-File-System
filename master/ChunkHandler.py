@@ -1,5 +1,5 @@
 """
-File name: assignChunkHandle.py
+File name: ChunkHandle.py
 
 Functionality:
 contains the class called ChunkHandler which return a string version immutable
