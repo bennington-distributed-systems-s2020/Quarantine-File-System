@@ -1,12 +1,12 @@
 """
- store.py - Metadata Store object that holds th:xe information
-            mapping files to chunks.
- Author: Five Grant (fivegrant@bennington.edu)
+ store.py - Metadata Store object that holds the information
+            mapping files to chunks and manages the metadata.
  Date: 5/12/2020
 """
 
 import os.path
-from filemap import FileMap
+from filemap import *
+from metadata_errors import *
 
 class MetadataStore:
     def __init__(self, logfile):
@@ -14,35 +14,65 @@ class MetadataStore:
          # WAITING FOR THE LOG OPERATIONS TO BE FLESHED OUT 
         self.store = FileMap()
 
-    def __getitem__(self, filename, chunk_index):
-        pass
+    def get_chunk(self, filename, chunk_index):
+        try:
+            query = self.store[filename][chunk_index]
+            query += [self.store.get_chunkservers(query[0])] #Add chunkserver list
+            return query
+        except KeyError:
+            raise FileNameKeyError(filename)
+        except IndexError:
+            raise ChunkIndexError(filename, index)
+            
     
     # Update store to reflect chunk creations and mutations
-    def __setitem__(self):
-        pass
+    def mutate_chunk(self, filename, chunk_index, size):
+        try:
+            # The `1` index is `size` in `[chunkhandle, size]`
+            self.store[filename][chunk_index][1] = size
+        except KeyError:
+            raise FileNameKeyError(filename)
+        except IndexError:
+            raise ChunkIndexError(filename, index)
 
-    def __delitem__(self, ):
-        pass
+    def create_chunk(self, filename, chunkhandle, chunkservers):
+        try:
+            self.store[filename] += [chunkhandle, 0]
+            self.store[chunkhandle] = chunkservers
+            #TODO Toggle all chunkservers list to `on`
+        except KeyError:
+            raise FileNameKeyError(filename)
 
-    def create(self, filename, , chunkhandle, chunkservers, lease):
-        pass
+    # Create file with no chunks if it doesnt exist
+    # tbh, i kind of want to move this code into create_chunk
+    def create_file(self, filename):
+        if filename not in store.files:
+            store.files += {filename: {}}
+        else:
+            return "File already exists"
 
-    def remove(self, filename, chunkhandle):
-        pass
-
-    def remove_all(self, filename):
-        for
+    # Remove chunkhandle or remove all chunkhandles from file if none are specified
+    def remove(self, filename, chunk_index = None):
+        # coulda done `if not chunkhandle:` but i feel like that's dirty
+        if chunkhandle == None:
+            del self.store[filename]
+        else:
+            del self.store[filename][chunkhandle]
 
     # Return the state. Use this dictionary on FileMap object to restore state
     def checkpoint(self):
-        return 
+        self.store.checkpoint()
 
+    # Access filemap function of the same name. Add an active server or
+    # remove an inactive one
     def toggle(self, chunkserver,on=True):
-        pass
+        self.store.toggle(chunkserver, on)
 
+    # List active chunkservers
     def locate
-        return chunkserver
+        return self.store.list_chunkservers()
 
+    # TODO: connect with Zak
     # This function restores the state of the Metadata store from the log file
     def restore(self):
         # Restore the state if log file exists
