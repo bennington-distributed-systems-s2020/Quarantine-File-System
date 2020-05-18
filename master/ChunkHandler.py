@@ -23,20 +23,22 @@ class ChunkHandler:
         self.chunkHandleCounter = chunkHandlerCounter
         self.maxChunkHandleHex = maxChunkHandleHex
 
-    def assign_chunk_handle(self):
-        self.chunkHandleCounter += 0x1
-        return hex(self.chunkHandleCounter)[2:]
+    def get_chunk_handle(self):
+        if self.chunkHandleCounter < self.maxChunkHandleHex:
+            self.chunkHandleCounter += 0x1
+            return hex(self.chunkHandleCounter)[2:]
+        else:
+            return False
 
     def __str__(self):
         return hex(self.chunkHandleCounter)[2:]
-
 
 
 if __name__ == "__main__":
     # testing
     h = ChunkHandler()
     for i in range(10):
-        output = h.assign_chunk_handle()
+        output = h.get_chunk_handle()
         print(output)
 
 
