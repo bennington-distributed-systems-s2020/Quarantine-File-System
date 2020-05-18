@@ -51,5 +51,4 @@ https://www.reddit.com/r/learnpython/comments/3birjt/is_there_a_way_to_do_math_i
 >>> sys.getsizeof(0x3fffffff) // 28  max hex number for 28 byte int
 >>> int('0x3fffffff', 16) // 1073741823 max int for 28 byte int
 
-Question: can I use string as part of the chunkhandle?
 """
