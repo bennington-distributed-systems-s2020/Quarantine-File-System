@@ -12,8 +12,9 @@ import json
 
 # Interface for master state
 class MetadataStorage:
-    def __init__(self, logfile_path):
+    def __init__(self, logfile_path, checkpoint_path):
         self.logfile_path = logfile_path
+        self.checkpoint_path = checkpoint_path
         self.store = FileMap()
 
     # Return metadata in the format [chunkhandle, size, replicas];
@@ -125,5 +126,5 @@ class MetadataStorage:
     # Creates a checkpoint in master.json when logs.json gets bigger than a specific limit we need to set
     # This function is triggered by write_to_log() above
     def create_checkpoint(self):
-        print("CRETE_CHECKPOINT")
-        # self.store.checkpoint()
+        with open(self.checkpoint_path, 'w') as json_file:
+            json.dump(self.store.checkpoint(), json_file, indent = 2)
