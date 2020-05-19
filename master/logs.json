@@ -1,0 +1,39 @@
+{
+  "logs": [
+    {
+      "action_type": "DELETE",
+      "details": {
+        "filename": "test.txt",
+        "chunk_index": 3
+      }
+    },
+    {
+      "action_type": "DELETE",
+      "details": {
+        "filename": "test.txt",
+        "chunk_index": 3
+      }
+    },
+    {
+      "action_type": "DELETE",
+      "details": {
+        "filename": "test.txt",
+        "chunk_index": 3
+      }
+    },
+    {
+      "action_type": "DELETE",
+      "details": {
+        "filename": "test.txt",
+        "chunk_index": 3
+      }
+    },
+    {
+      "action_type": "DELETE",
+      "details": {
+        "filename": "test.txt",
+        "chunk_index": 3
+      }
+    }
+  ]
+}

@@ -11,19 +11,43 @@ import json
 from ChunkHandler import ChunkHandler
 import os
 
-def create_new_file(fileName, fileDirectory, fileSize, numberOfReplicas, chunkHandleCounterJson):
+def createNewFile(fileName, fileDirectory, fileSize, numberOfReplicas, chunkHandleCounterJson):
     if fileName is None:
-        return False
+        return False # could also pass error message with a tuple: (False, "fileName is empty")
     if fileDirectory is None:
         return False
     if fileSize is None or (fileSize < 0) or type(fileSize) != type(64):
         return False
-
     numberOfChunksNeeded = getChunkSizeNeeded(fileSize)
-
+    chunkHandleList = getChunkHandle(numberOfChunksNeeded, chunkHandleCounterJson)
+    getDirectoryPathPathList(fileDirectory)
     newFileMetadata = {}
 
+
+def createNewDirectory(directoryName, directoryPath, metadata):
+    directoryPathList = getDirectoryPathPathList(directoryPath)
+    curr = metadata
     
+    # make sure the path is valid, traverse the path to the valid directory
+    for directory in directoryPathList:
+        if directory not in metadata.keys():
+            return False
+        else:
+            curr = metadata[directory]
+    # if valid, add the new directory in the metadata
+    curr[directoryName] = {}
+    
+    # log the operation
+
+
+# this is the function that you use to get chunkHandle according to number of chunks needed
+def getChunkHandle(numberOfChunksNeeded, chunkHandleCounterJson):
+    chunkHandlerDict = getChunkHandlerCounter(chunkHandleCounterJson)
+    chunkHandler = ChunkHandler(chunkHandleCounter=chunkHandlerDict["chunkHandleCounter"])
+    handleList = createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson)
+    return handleList    
+
+
 def getChunkSizeNeeded(fileSize):
     if fileSize % 64 == 0:
         numberOfChunksNeeded = fileSize / 64
@@ -31,11 +55,6 @@ def getChunkSizeNeeded(fileSize):
     else:
         numberOfChunksNeeded = int(fileSize / 64) + 1
         return numberOfChunksNeeded
-
-
-def getFileDirectoryPathList(fileDirectory):
-    return ["/"] + fileDirectory.split("/")[1:]
-
 
 def getChunkHandlerCounter(chunkHandleCounterJson):
     chunkHandleCounterDict = {}
@@ -50,7 +69,6 @@ def updateChunkHandleCounter(hexNumber, chunkHandleCounterJson):
     with open(chunkHandleCounterJson, "w") as f:
         f.write(data)
 
-
 def createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson):
     handleList = []
     counter = None
@@ -61,26 +79,47 @@ def createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson
     updateChunkHandleCounter(counter, chunkHandleCounterJson)
     return handleList
 
+def getDirectoryPathPathList(directoryPath):
+    pathSlash = "/"
+    return [pathSlash] + directoryPath.split(pathSlash)[1:]
 
-# this is the function that you use to get chunkHandle according to number of chunks needed
-def getChunkHandle(numberOfChunksNeeded, chunkHandleCounterJson):
-    currentPath = (os.getcwd() + os.sep + "master")
-    os.chdir(currentPath)
-    chunkHandlerDict = getChunkHandlerCounter(chunkHandleCounterJson)
-    chunkHandler = ChunkHandler(chunkHandleCounter=chunkHandlerDict["chunkHandleCounter"])
-    handleList = createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson)
-    return handleList
+def isValidDirectoryPath(directoryPath, metadata):
+    directoryPathList = getDirectoryPathPathList(directoryPath)
+    currDirectory = metadata
+    # make sure the path is valid, traverse the path to the valid directory
+    for directory in directoryPathList:
+        if directory not in metadata.keys():
+            return False
+        else:
+            currDirectory = metadata[directory]
+    # if valid, return the meata that points the valid directory path
+    return currDirectory
 
 
 if __name__ == "__main__":
-    r = getChunkHandle(20, "chunkHandleCounter.json")
-    print(r)    
+    # testing
+    # r = getChunkHandle(20, "chunkHandleCounter.json")
+    # print(r)
+    metadata = {
+        "/":{
+            "work":{
+                "cs":{
 
+                }
+            }
+        }
+    }
 
-
-
+    print(getDirectoryPathPathList("/work/cs"))
+    s = isValidDirectoryPath("/work/cs",metadata)
+    print(s)
 
 """
+
+* getchunk- returns a list [chunkhandle, size, [replicas]]
+
+
+
 Inputs: 
 file name
 folder Path (namespace)
