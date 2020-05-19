@@ -4,7 +4,6 @@
  Date: 5/17/2020
 """
 
-
 class ChunkIndexError(Exception):
     def __init__(self, filename, index):
         super().__init__(f'{file} does not have a chunk at index number: {index}')

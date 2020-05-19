@@ -8,12 +8,14 @@ import os.path
 from filemap import *
 from metadata_errors import *
 
+# Interface for master state
 class MetadataStorage:
     def __init__(self, logfile):
         self.logfile = logfile
-         # WAITING FOR THE LOG OPERATIONS TO BE FLESHED OUT 
+        #self.restore()? # WAITING FOR THE LOG OPERATIONS TO BE FLESHED OUT 
         self.store = FileMap()
 
+    # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
         try:
             query = self.store[filename][chunk_index]
@@ -35,6 +37,7 @@ class MetadataStorage:
         except IndexError:
             raise ChunkIndexError(filename, index)
 
+    # Append a new chunk to file
     def create_chunk(self, filename, chunkhandle, chunkservers):
         try:
             self.store[filename] += [chunkhandle, 0]
