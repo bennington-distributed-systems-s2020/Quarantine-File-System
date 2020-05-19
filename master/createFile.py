@@ -8,23 +8,20 @@ Date: May 17th, 2020
 Author: Zhihong Li
 """
 import json
-import jsonify
 from ChunkHandler import ChunkHandler
+import os
 
-
-def create_new_file(fileName, folderPath, fileSize, numberOfReplicas):
+def create_new_file(fileName, fileDirectory, fileSize, numberOfReplicas, chunkHandleCounterJson):
     if fileName is None:
         return False
-    if folderPath is None:
+    if fileDirectory is None:
         return False
     if fileSize is None or (fileSize < 0) or type(fileSize) != type(64):
         return False
 
     numberOfChunksNeeded = getChunkSizeNeeded(fileSize)
 
-    metadata = {}
-    chunkHandler = ChunkHandler()
-    
+    newFileMetadata = {}
 
     
 def getChunkSizeNeeded(fileSize):
@@ -34,6 +31,54 @@ def getChunkSizeNeeded(fileSize):
     else:
         numberOfChunksNeeded = int(fileSize / 64) + 1
         return numberOfChunksNeeded
+
+
+def getFileDirectoryPathList(fileDirectory):
+    return ["/"] + fileDirectory.split("/")[1:]
+
+
+def getChunkHandlerCounter(chunkHandleCounterJson):
+    chunkHandleCounterDict = {}
+    with open(chunkHandleCounterJson) as f:
+        chunkHandleCounterDict = json.load(f)
+    return chunkHandleCounterDict
+
+def updateChunkHandleCounter(hexNumber, chunkHandleCounterJson):
+    data = getChunkHandlerCounter(chunkHandleCounterJson)
+    data["chunkHandleCounter"] = hexNumber
+    data = json.dumps(data)
+    with open(chunkHandleCounterJson, "w") as f:
+        f.write(data)
+
+
+def createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson):
+    handleList = []
+    counter = None
+    for i in range(numberOfChunksNeeded):
+        newHandle = chunkHandler.get_chunk_handle()
+        counter = newHandle
+        handleList.append(newHandle)
+    updateChunkHandleCounter(counter, chunkHandleCounterJson)
+    return handleList
+
+
+# this is the function that you use to get chunkHandle according to number of chunks needed
+def getChunkHandle(numberOfChunksNeeded, chunkHandleCounterJson):
+    currentPath = (os.getcwd() + os.sep + "master")
+    os.chdir(currentPath)
+    chunkHandlerDict = getChunkHandlerCounter(chunkHandleCounterJson)
+    chunkHandler = ChunkHandler(chunkHandleCounter=chunkHandlerDict["chunkHandleCounter"])
+    handleList = createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson)
+    return handleList
+
+
+if __name__ == "__main__":
+    r = getChunkHandle(20, "chunkHandleCounter.json")
+    print(r)    
+
+
+
+
 
 """
 Inputs: 

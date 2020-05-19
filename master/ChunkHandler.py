@@ -19,21 +19,35 @@ Date: May 17th, 2020
 Author: Zhihong Li
 """
 class ChunkHandler:
-    def __init__(self, chunkHandlerCounter=0x0, maxChunkHandleHex = 0x3fffffff):
-        self.chunkHandleCounter = chunkHandlerCounter
+    def __init__(self, chunkHandleCounter=0x0, maxChunkHandleHex = 0x3fffffff):
+        self.chunkHandleCounter = chunkHandleCounter
+        self.convertStrToHex()
         self.maxChunkHandleHex = maxChunkHandleHex
 
     def get_chunk_handle(self):
+        if type(self.chunkHandleCounter) == str:
+            self.chunkHandleCounter = int(self.chunkHandleCounter, 16)
+
         if self.chunkHandleCounter < self.maxChunkHandleHex:
-            self.chunkHandleCounter += 0x1
-            return hex(self.chunkHandleCounter)[2:]
+            self.chunkHandleCounter += 1
+            self.chunkHandleCounter = hex(self.chunkHandleCounter)
+            if type(self.chunkHandleCounter) == str:
+                return self.chunkHandleCounter[2:]
+            else:
+                return self.chunkHandleCounter
         else:
             return False
+
+    def convertStrToHex(self):
+        if type(self.chunkHandleCounter) == str:
+            strHex = "0x" + self.chunkHandleCounter
+            num = int(strHex, 16)
+            self.chunkHandleCounter = hex(num)
 
     def __str__(self):
         return hex(self.chunkHandleCounter)[2:]
 
-
+    
 if __name__ == "__main__":
     # testing
     h = ChunkHandler()
