@@ -12,7 +12,6 @@ from metadata_errors import *
 class MetadataStorage:
     def __init__(self, logfile):
         self.logfile = logfile
-        #self.restore()? # WAITING FOR THE LOG OPERATIONS TO BE FLESHED OUT 
         self.store = FileMap()
 
     # Return metadata in the format [chunkhandle, size, replicas];
@@ -62,10 +61,6 @@ class MetadataStorage:
         else:
             del self.store[filename][chunkhandle]
 
-    # Return the state. Use this dictionary on FileMap object to restore state
-    def checkpoint(self):
-        self.store.checkpoint()
-
     # Access filemap function of the same name. Add an active server or
     # remove an inactive one
     def toggle(self, chunkserver,on=True):
@@ -75,8 +70,9 @@ class MetadataStorage:
     def locate
         return self.store.list_chunkservers()
 
-    # TODO: connect with Zak
-    # This function restores the state of the Metadata store from the log file
+    # Recovers the master's state on startup
+    # Uses the latest checkpoint (master.json) if available and then reads logs (logs.json)
+    # This function needs to be called on master startup
     def recover(self):
         # Restore the state if log file exists
         if os.path.exist(self.logfile):
@@ -97,4 +93,12 @@ class MetadataStorage:
         else:
             return FileMap()
 
-                
+    # Writes a log to logs.json
+    # This function is called every time some important operation has been executed
+    def write_to_log(self, log):
+        pass
+
+    # Creates a checkpoint in master.json when logs.json gets bigger than a specific limit we need to set
+    # This function is triggered by write_to_log() above
+    def create_checkpoint(self):
+        self.store.checkpoint()
