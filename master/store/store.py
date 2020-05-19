@@ -73,28 +73,24 @@ class MetadataStorage:
     def locate():
         return self.store.list_chunkservers()
 
-    # Recovers the master's state on startup
+    # Recovers the master's state at startup
     # Uses the latest checkpoint (master.json) if available and then reads logs (logs.json)
-    # This function needs to be called on master startup
+    # This function needs to be called at master startup
     def recover(self):
-        # Restore the state if log file exists
-        if os.path.exist(self.logfile):
-            with open(self.logfile, "w+") as logfile:
-                # Load JSON from each line. THIS IS ASSUMING JSON FOR EACH LOG
-                capture = json.loads(i)
-                for i in logfile.readlines():
-                    if self.store != {}:
-                        if "mutate" in capture:
-                            pass
-                        if "delete" in capture:
-                            pass
-                        if "create" in capture:
-                            pass
-                    else:
-                        # Restores checkpoint (only should run on first line)
-                        self.store = FileMap(capture)
-        else:
-            return FileMap()
+        # Restore the latest checkpoint from checkpoint.json 
+        with open(self.checkpoint_path) as json_file:
+            checkpoint = json.load(json_file) 
+        # update current state   
+        self.store.files = checkpoint["files"]
+        self.store.chunkhandle_map = checkpoint["chunkhandles"]
+
+        # Plays logs (from logs.json) on top of the current state
+        with open(self.logfile_path) as json_file:
+            logs = json.load(json_file)
+            
+            for log in logs:
+                # need to decide on action types and parameters
+
 
     # Writes a log to logs.json
     # This function is called every time some important operation has been executed
