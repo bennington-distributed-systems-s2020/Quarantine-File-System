@@ -1,7 +1,6 @@
 cd $(dirname $0)
-cd chunkserver
-docker build -t qfs-chunkserver .
+docker build -t qfs-chunk chunkserver/.
 docker run -d --rm \
-	--name "qfs-chunkserver-$2" \
+	--name "qfs-chunk-$2" \
 	-p "$1":8000 \
-	qfs-chunkserver
+	qfs-chunk
