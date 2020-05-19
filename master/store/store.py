@@ -97,6 +97,8 @@ class MetadataStorage:
 
     # Writes a log to logs.json
     # This function is called every time some important operation has been executed
+    # Call example:
+    # self.write_to_log("DELETE", {"filename": "test.txt", "chunk_index": 3})
     def write_to_log(self, action_type, details):
         # creates a new log
         new_log = {
