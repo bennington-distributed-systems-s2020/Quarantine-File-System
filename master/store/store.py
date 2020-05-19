@@ -17,6 +17,10 @@ class MetadataStorage:
         self.store = FileMap()
         self.chunkhandler = ChunkHandler()
 
+    def retrieveStorage():
+        nonexist = MetadataStorage.__instance
+        return MetadataStorage if nonexist else MetadataStorage.__instance
+
     # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
         try:
