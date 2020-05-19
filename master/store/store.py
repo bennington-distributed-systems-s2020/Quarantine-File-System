@@ -5,16 +5,17 @@
 """
 
 import os.path
+import json
 from filemap import *
 from metadata_errors import *
-
-import json
+from chunkhandler import *
 
 # Interface for master state
 class MetadataStorage:
     def __init__(self, logfile_path):
         self.logfile_path = logfile_path
         self.store = FileMap()
+        self.chunkhandler = ChunkHandler()
 
     # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
@@ -71,6 +72,10 @@ class MetadataStorage:
     # List active chunkservers
     def locate():
         return self.store.list_chunkservers()
+
+    #TODO Implement count in checkpoint
+    def get_chunk_handle(self):
+        self.chunkhandler.get_chunk_handle()
 
     # Recovers the master's state on startup
     # Uses the latest checkpoint (master.json) if available and then reads logs (logs.json)
