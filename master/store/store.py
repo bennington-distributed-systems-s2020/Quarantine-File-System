@@ -8,7 +8,7 @@ import os.path
 from filemap import *
 from metadata_errors import *
 
-class Metadata:
+class MetadataStorage:
     def __init__(self, logfile):
         self.logfile = logfile
          # WAITING FOR THE LOG OPERATIONS TO BE FLESHED OUT 
