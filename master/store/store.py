@@ -8,10 +8,12 @@ import os.path
 from filemap import *
 from metadata_errors import *
 
+import json
+
 # Interface for master state
 class MetadataStorage:
-    def __init__(self, logfile):
-        self.logfile = logfile
+    def __init__(self, logfile_path):
+        self.logfile_path = logfile_path
         self.store = FileMap()
 
     # Return metadata in the format [chunkhandle, size, replicas];
@@ -29,7 +31,7 @@ class MetadataStorage:
     # Update store to reflect chunk creations and mutations
     def mutate_chunk(self, filename, chunk_index, size):
         try:
-            # The `1` index is `size` in `[chunkhandle, size]`
+            # The `1` index wis `size` in `[chunkhandle, size]`
             self.store[filename][chunk_index][1] = size
         except KeyError:
             raise FileNameKeyError(filename)
@@ -67,7 +69,7 @@ class MetadataStorage:
         self.store.toggle(chunkserver, on)
 
     # List active chunkservers
-    def locate
+    def locate():
         return self.store.list_chunkservers()
 
     # Recovers the master's state on startup
@@ -95,10 +97,31 @@ class MetadataStorage:
 
     # Writes a log to logs.json
     # This function is called every time some important operation has been executed
-    def write_to_log(self, log):
-        pass
+    def write_to_log(self, action_type, details):
+        # creates a new log
+        new_log = {
+            "action_type": action_type,
+            "details": details
+        }
+
+        # read
+        with open(self.logfile_path) as json_file:
+            logs = json.load(json_file)
+
+        # appends to the current list of logs
+        logs["logs"].append(new_log)
+
+        # write
+        with open(self.logfile_path, 'w') as json_file:
+            json.dump(logs, json_file, indent = 2)
+
+        # checks the logs.json size and trigger create_checkpoint if needed
+        if len(logs["logs"]) + 1 > 5000: # need to decide on the max size of logs
+            self.create_checkpoint()
+
 
     # Creates a checkpoint in master.json when logs.json gets bigger than a specific limit we need to set
     # This function is triggered by write_to_log() above
     def create_checkpoint(self):
-        self.store.checkpoint()
+        print("CRETE_CHECKPOINT")
+        # self.store.checkpoint()
