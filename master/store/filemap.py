@@ -14,10 +14,11 @@ without complicating or breaking the interface with other components
 
 class FileMap:
     def __init__(self, state = {}):
-        self.files = {} if not state else state["files"]
+        self.files = {"":{}} if not state else state["files"]
         #each filename-> [[chunkhandle, size], [chunkhandle2, size], ...]
         self.chunkhandle_map = {} if not state else ["chunkhandles"]
 
+    # Break string up into a format that can be used to search the filemap
     def process_path(path):
         return path.split("/")
 
@@ -28,27 +29,65 @@ class FileMap:
                 "chunkhandles":self.chunkhandle_map
                }
 
+    # Retrieve chunk
     def retrieve(self, path, index, container = False):
         if not container: container = self.files
         path = path if not type(path) == type('string') else process_path(path)
-        content = self.files[path[0]]
+        content = container[path[0]]
         if path.length() == 1:
-            return content[index]
+            return content[index] + [self.get_chunkhandles(content[index][0])]
         else:
             return self.retrieve(path[1:], index, content)
 
-    def update(self, path, index, container = False, value)
+    # Add or mutate a chunk
+    def update(self, path, index, value, replicas = False, container = False)
         if not container: container = self.files
         path = path if not type(path) == type('string') else process_path(path)
-        content = self.files[path[0]]
-        if path.length() == 1:
+        elif path.length() == 1:
+            # Update if the chunk exists
+            if replicas: self.chunkhandle_map[value[0]] = replicas
             if content.length() - 1 <= index:
-                content[index] = value
+                if value.length() == 1:
+                    content[index][1] = value
+                else:
+                    content[index] = value
                 return content
             else:
-                content[index] += [value[0:2]]
+                # Append to chunk list if it doesn't exist
+                content[index] += [value]
+                if replicas: self.chunkhandle_map[value[0]] = replicas
+                return content
         else:
-            return self.update(path[1:], index, content, value)
+            content[path[0]] = self.update(path[1:], index, value, replicas, content[path[0]])
+            return content
+
+    def make_path(self, path, top = True, directory = False, container = False):
+        path = path if not type(path) == type('string') else process_path(path)
+        if not container: container = self.files
+        if top and path.length() == 1:
+            return False
+        elif top:
+            return self.make_path(path[1:], False, path[-1]=="", container[path[0]])
+        elif path.length() == 1:
+            if path[0] in container:
+                return False
+            else:
+                container[path] = {} if directory else []
+                return container
+        else:
+            content =  self.make_path(path[1:], False, path[-1]=="", container[path[0]])
+            return content
+            
+            
+    def verify_path(self, path, container = False):
+        path = path if not type(path) == type('string') else process_path(path)
+        if not container: container = self.files
+        if path.length() == 1:
+            return path[0] in container
+        else:
+            return verify_path(path[1:], content[path[0]])
+        
+
 
     #Add an active server or remove an inactive one
     def toggle(self, chunkserver, on):
