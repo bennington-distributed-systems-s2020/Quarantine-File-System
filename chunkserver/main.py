@@ -11,10 +11,25 @@ app = Flask(__name__)
 def example():
 	return "Chunkserver Flask API!"
 
-@app.route("/create/")
-def create():
-	abort(501)
-	return ""
+@app.route("/create/<chunk_handle>")
+def create(chunk_handle):
+	lease = lease(chunk_handle)
+	chunk_file = {}
+	chunk_file["chunk"] = []
+	chunk_file["chunk"].append({
+        	"name" : chunk_handle,
+        	"mutable" : 0,
+        	"lease" : lease,
+        	"ISO date_time" : lease_time.isoformat(),
+		"data" : data
+    	})
+	with open(chunk_handle + '.txt', 'w') as chunk:
+		json.dump(chunk_file, chunk)
+		if json.load(chunk):
+			success = 1
+		else:
+			success = 0
+		return success
 
 @app.route("/lease", strict_slashes=False, methods=['POST'])
 def lease():
