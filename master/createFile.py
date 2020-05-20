@@ -1,5 +1,5 @@
 """
-filename: createFile.py
+file_name: createFile.py
 
 functionality: Used for creating a new file for a client.
 1. it assignes the new file
@@ -8,28 +8,30 @@ Date: May 17th, 2020
 Author: Zhihong Li
 """
 import json
-from ChunkHandler import ChunkHandler
+from chunkhandler import ChunkHandler
 import os
 
-def createNewFile(fileName, fileDirectory, fileSize, numberOfReplicas, chunkHandleCounterJson):
-    if fileName is None:
-        return False # could also pass error message with a tuple: (False, "fileName is empty")
-    if fileDirectory is None:
+def create_new_file(file_name, directory_path, file_size, number_of_replicas, chunk_handle_counter_json):
+    if file_name is None:
+        return False # could also pass error message with a tuple: (False, "file_name is empty")
+    # verify the path
+    if directory_path is None:
         return False
-    if fileSize is None or (fileSize < 0) or type(fileSize) != type(64):
+    # verify the 
+    if file_size is None or (file_size < 0) or type(file_size) != type(64):
         return False
-    numberOfChunksNeeded = getChunkSizeNeeded(fileSize)
-    chunkHandleList = getChunkHandle(numberOfChunksNeeded, chunkHandleCounterJson)
-    getDirectoryPathPathList(fileDirectory)
-    newFileMetadata = {}
+    number_of_chunks_needed = get_chunk_size_needed(file_size)
+    chunk_handle_list = get_chunk_handle(number_of_chunks_needed, chunk_handle_counter_json)
+    get_directory_path_list(directory_path)
+    new_file_metadata = {}
 
 
-def createNewDirectory(directoryName, directoryPath, metadata):
-    directoryPathList = getDirectoryPathPathList(directoryPath)
+def create_new_directory(directoryName, directory_path, metadata):
+    directory_pathList = get_directory_path_list(directory_path)
     curr = metadata
     
     # make sure the path is valid, traverse the path to the valid directory
-    for directory in directoryPathList:
+    for directory in directory_pathList:
         if directory not in metadata.keys():
             return False
         else:
@@ -41,89 +43,64 @@ def createNewDirectory(directoryName, directoryPath, metadata):
 
 
 # this is the function that you use to get chunkHandle according to number of chunks needed
-def getChunkHandle(numberOfChunksNeeded, chunkHandleCounterJson):
-    chunkHandlerDict = getChunkHandlerCounter(chunkHandleCounterJson)
-    chunkHandler = ChunkHandler(chunkHandleCounter=chunkHandlerDict["chunkHandleCounter"])
-    handleList = createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson)
+def get_chunk_handle(number_of_chunks_needed, chunk_handle_counter_json):
+    chunk_handler_dict = get_chunk_handlerCounter(chunk_handle_counter_json)
+    chunk_hanlder = ChunkHandler(chunkHandleCounter=chunk_handler_dict["chunkHandleCounter"])
+    handleList = create_chunk_handle(number_of_chunks_needed, chunk_hanlder, chunk_handle_counter_json)
     return handleList    
 
 
-def getChunkSizeNeeded(fileSize):
-    if fileSize % 64 == 0:
-        numberOfChunksNeeded = fileSize / 64
-        return numberOfChunksNeeded
+def get_chunk_size_needed(file_size):
+    if file_size % 64 == 0:
+        number_of_chunks_needed = file_size / 64
+        return number_of_chunks_needed
     else:
-        numberOfChunksNeeded = int(fileSize / 64) + 1
-        return numberOfChunksNeeded
+        number_of_chunks_needed = int(file_size / 64) + 1
+        return number_of_chunks_needed
 
-def getChunkHandlerCounter(chunkHandleCounterJson):
+
+def get_chunk_handlerCounter(chunk_handle_counter_json):
     chunkHandleCounterDict = {}
-    with open(chunkHandleCounterJson) as f:
+    with open(chunk_handle_counter_json) as f:
         chunkHandleCounterDict = json.load(f)
     return chunkHandleCounterDict
 
-def updateChunkHandleCounter(hexNumber, chunkHandleCounterJson):
-    data = getChunkHandlerCounter(chunkHandleCounterJson)
+
+def update_chunk_handle_counter(hexNumber, chunk_handle_counter_json):
+    data = get_chunk_handlerCounter(chunk_handle_counter_json)
     data["chunkHandleCounter"] = hexNumber
     data = json.dumps(data)
-    with open(chunkHandleCounterJson, "w") as f:
+    with open(chunk_handle_counter_json, "w") as f:
         f.write(data)
 
-def createChunkhandle(numberOfChunksNeeded, chunkHandler, chunkHandleCounterJson):
+def create_chunk_handle(number_of_chunks_needed, chunk_hanlder, chunk_handle_counter_json):
     handleList = []
     counter = None
-    for i in range(numberOfChunksNeeded):
-        newHandle = chunkHandler.get_chunk_handle()
+    for i in range(number_of_chunks_needed):
+        newHandle = chunk_hanlder.get_chunk_handle()
         counter = newHandle
         handleList.append(newHandle)
-    updateChunkHandleCounter(counter, chunkHandleCounterJson)
+    update_chunk_handle_counter(counter, chunk_handle_counter_json)
     return handleList
 
-def getDirectoryPathPathList(directoryPath):
+def get_directory_path_list(directory_path):
     pathSlash = "/"
-    return [pathSlash] + directoryPath.split(pathSlash)[1:]
-
-def isValidDirectoryPath(directoryPath, metadata):
-    directoryPathList = getDirectoryPathPathList(directoryPath)
-    currDirectory = metadata
-    # make sure the path is valid, traverse the path to the valid directory
-    for directory in directoryPathList:
-        if directory not in metadata.keys():
-            return False
-        else:
-            currDirectory = metadata[directory]
-    # if valid, return the meata that points the valid directory path
-    return currDirectory
+    return [pathSlash] + directory_path.split(pathSlash)[1:]
 
 
 if __name__ == "__main__":
     # testing
-    # r = getChunkHandle(20, "chunkHandleCounter.json")
+    # r = get_chunk_handle(20, "chunkHandleCounter.json")
     # print(r)
-    metadata = {
-        "/":{
-            "work":{
-                "cs":{
 
-                }
-            }
-        }
-    }
-
-    print(getDirectoryPathPathList("/work/cs"))
-    s = isValidDirectoryPath("/work/cs",metadata)
-    print(s)
 
 """
-
 * getchunk- returns a list [chunkhandle, size, [replicas]]
-
-
 
 Inputs: 
 file name
 folder Path (namespace)
-fileSize(unit MB)
+file_size(unit MB)
  
 What happens in the function:
 Get number of chunks needed for the file
