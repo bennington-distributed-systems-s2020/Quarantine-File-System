@@ -102,7 +102,7 @@ def chunk_inventory() -> dict:
             #https://www.w3docs.com/snippets/javascript/the-right-json-date-format.html
             #https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
             information['lease'] = lease_time.isoformat() + 'Z'
-            information['size'] = os.path.getsize(config["CHUNK_PATH"] + chunk) - 16
+            information['size'] = os.path.getsize(config["CHUNK_PATH"] + chunk) - 9 #9 starting bytes
 
             f.close()
 

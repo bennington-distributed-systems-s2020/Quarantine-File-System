@@ -3,7 +3,8 @@ from flask import Flask, request, Response, json, abort
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-import master_interact, lease_grant
+import master_interact
+import lease_grant
 
 app = Flask(__name__)
 
@@ -92,7 +93,7 @@ def lease_grant():
 @app.route("/read/<int:chunk_handle>,<int:start_byte>,<int:byte_range>")
 def read(chunk_handle, start_byte, byte_range):
 	with open(chunk_handle + '.chunk') as c_file:
-		chunk_data = c_file.seek(start_byte + 16) #16 first information bytes
+		chunk_data = c_file.seek(start_byte + 9) #9 first information bytes
 		json_data = json.load(chunk_data)
 		return_list = []
 		for x in range(0, byte_range):
