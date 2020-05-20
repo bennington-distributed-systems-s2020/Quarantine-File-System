@@ -80,8 +80,8 @@ def lease_grant():
     request_json = request.get_json()
     try:
         return app.response_class(json.dumps(lease_grant.lease_grant(request_json['chunk_handle'],
-                                                  request_json['timestamp'],
-                                                  request_json['replica'])),
+                                                                     request_json['timestamp'],
+                                                                     request_json['replica'])),
                                   content_type='application/json')
     except (KeyError, IOError, OSError) as e:
         abort(400)

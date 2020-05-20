@@ -23,10 +23,10 @@ class TestLease(unittest.TestCase):
         self.test_chunk.truncate(0)
         self.test_chunk.close()
 
-        self.no_lease = b'0020200516210900'
-        self.big_date = b'0120190516210900'
-        self.big_time = b'0120200516200900'
-        self.true_lease = b'0120200516212020'
+        self.no_lease = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00' #2019/05/20 20:59:00
+        self.big_date = b'\x00\x01\x07\xe3\x05\x14\x14\x3b\x00' #2019/05/20 20:59:00
+        self.big_time = b'\x00\x01\x07\xe4\x05\x14\x00\x00\x00' #2020/05/20 00:00:00
+        self.true_lease = b'\x00\x01\x07\xe4\x05\x14\x0f\x12\x00' #2020/05/20 15:03:00
 
     def test_lease_false(self):
         self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
@@ -37,7 +37,7 @@ class TestLease(unittest.TestCase):
 
         r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
-        self.assertEqual(r.text, 'false')
+        self.assertFalse(r.json())
 
     def test_lease_400(self):
         r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.false_string})
@@ -52,7 +52,7 @@ class TestLease(unittest.TestCase):
 
         r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
-        self.assertEqual(r.text, 'false')
+        self.assertFalse(r.json())
 
     def test_lease_big_time(self):
         self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
@@ -63,7 +63,7 @@ class TestLease(unittest.TestCase):
 
         r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
-        self.assertEqual(r.text, 'false')
+        self.assertFalse(r.json())
 
     def test_lease_true(self):
         self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
@@ -74,7 +74,7 @@ class TestLease(unittest.TestCase):
 
         r = requests.post('http://0.0.0.0:5000/lease', json={'chunk_handle': self.test_string})
         self.assertTrue(r.status_code == 200)
-        self.assertEqual(r.text, 'false')
+        self.assertTrue(r.json())
 
     def tearDown(self):
         self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
@@ -88,7 +88,7 @@ class TestLease(unittest.TestCase):
 class testChunkInventory(unittest.TestCase):
     def setUp(self):
         self.test_string = '-1'
-        self.test_data = b'0020200516210900'
+        self.test_data = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00'
 
         self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
@@ -111,7 +111,7 @@ class testGarbageCollection(unittest.TestCase):
     def setUp(self):
         self.test_string = '0123'
         self.test_string2 = '0456'
-        self.test_data = b'0020200516210900'
+        self.test_data = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00'
 
         self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'wb')
         self.test_chunk.seek(0)
