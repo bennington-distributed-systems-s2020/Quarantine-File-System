@@ -16,13 +16,13 @@ def create(chunk_handle):
 	chunk_file = {}
 	chunk_file["chunk"] = []
 	chunk_file["chunk"].append({
-        	"name" : chunk_handle,
-        	"mutable": 0,
-		"lease": 0, 
-		"ISO_lease_time": 00000000, 
+                "name" : chunk_handle,
+                "mutable": 0,
+		"lease": 0,
+		"ISO_lease_time": 00000000,
 		"lease_time":00000000
-    	})
-	with open(chunk_handle + '.txt', 'w') as chunk:
+        })
+	with open(chunk_handle + '.chunk', 'w') as chunk:
 		json.dump(chunk_file, chunk)
 		if json.load(chunk):
 			success = 1
@@ -91,7 +91,7 @@ def lease_grant():
 
 @app.route("/read/<int:chunk_handle>,<int:start_byte>,<int:byte_range>")
 def read(chunk_handle, start_byte, byte_range):
-	with open(chunk_handle + '.txt') as c_file:
+	with open(chunk_handle + '.chunk') as c_file:
 		chunk_data = c_file.seek(start_byte)
 		json_data = json.load(chunk_data)
 		return_list = []
