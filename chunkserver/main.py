@@ -9,29 +9,30 @@ app = Flask(__name__)
 
 @app.route("/")
 def example():
-	return "Chunkserver Flask API!"
+    return "Chunkserver Flask API!"
 
 @app.route("/create/<chunk_handle>/<mutation>/<data>")
 def create(chunk_handle, mutation, data):
-	lease = lease(chunk_handle) 
-	chunk_file = {}
-    	chunk_file["chunk"] = []
-    	chunk_file["chunk"].append({
-        	"name" : chunk_handle,
-        	"mutable" : mutation,
-        	"lease" : lease,
-        	"ISO date_time" : lease_time.isoformat()
-		"data" : data
-    	})
-	with open(chunk_handle + '.txt', 'w') as chunk_file:
-    		json.dump(chunk, chunk_file)
-		if json.load(chunk_file):
-			success = 1
-		else: 
-			success = 0 
-	return success 
+    lease = lease(chunk_handle)
+    chunk_file = {}
+    chunk_file["chunk"] = []
+    chunk_file["chunk"].append({
+            "name" : chunk_handle,
+            "mutable" : mutation,
+            "lease" : lease,
+            "ISO date_time" : lease_time.isoformat(),
+            "data" : data
+    })
+    with open(chunk_handle + '.txt', 'w') as chunk_file:
+        json.dump(chunk, chunk_file)
+        if json.load(chunk_file):
+                success = 1
+        else:
+                success = 0
+    return success
 
-@app.route("/lease", strict_slashes=False, methods=['POST'])
+#lease: check whether a chunk has a lease or not
+@app.route("/lease", strict_slashes=False, methods=['GET', 'POST'])
 def lease():
     request_json = request.get_json()
     try:
@@ -45,6 +46,7 @@ def lease():
         app.logger.error("Exception.", exc_info = True)
         abort(500)
 
+#chunk-inventory: returns information for a random subset of chunk
 @app.route("/chunk-inventory/", strict_slashes=False, methods=['GET', 'POST'])
 def chunk_inventory():
     try:
@@ -53,7 +55,8 @@ def chunk_inventory():
         app.logger.error("Exception.", exc_info = True)
         abort(500)
 
-@app.route("/collect-garbage/", strict_slashes=False, methods=['POST'])
+#collect-garbage: delete the chunks listed
+@app.route("/collect-garbage/", strict_slashes=False, methods=['GET', 'POST'])
 def collect_garbage():
     request_json = request.get_json()
     try:
@@ -63,6 +66,11 @@ def collect_garbage():
     except Exception as e:
         app.logger.error("Exception.", exc_info = True)
         abort(500)
+
+@app.route("/lease-request/", strict_slashes=False, methods=['GET', 'POST'])
+def lease_request():
+    abort(501)
+    return""
 
 @app.route("/read") #/<int:chunk_handle>,<int:start_byte>,<int:byte_range>
 def read():#chunk_handle, start_byte, byte_range):
