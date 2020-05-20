@@ -3,8 +3,9 @@ from flask import Flask, request, Response, json, abort
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-import master_interact
-import lease_grant
+import master_interact, lease_grant
+MAX_APPEND_LIMIT = 16
+CHUNK_SIZE = 64
 
 app = Flask(__name__)
 
@@ -102,12 +103,44 @@ def read(chunk_handle, start_byte, byte_range):
 
 	return return_list
 
-@app.route("/append")
+@app.route("/append", strict_slashes=False, methods=['GET', 'POST'])
 def append():
-    abort(501)
-    return ""
+	"""
+	The Append function which takes data from the Client
+
+	It expects JSON input from an HTTP POST request in the form: {
+		'chunk_handle': <hex>,
+		'bytes': <binary_data>
+	}
+	It implements a skeleton LRU (Least Recently Used) Cache but currently cached bytes have no expiration (FIXME). Bytes are stored in a <chunk_handle>.chunk.<timestamp>.cache file
+
+	It returns:
+		- 0: Success: It worked
+		- 1: Failure: Too many Bytes
+		- 2: Failure: Chunk too full
+		- 3: Failure: Yo idk
+	"""
+	# save the chunk_handle and bytes from the POST request's JSON
+	request_json = request.get_json()
+	chunk_handle = request_json['chunk_handle']
+	bytes = request_json['bytes'] # FIXME should typecast as bytes
+	if len(bytes) > MAX_APPEND_LIMIT:
+		return 1 # The operation failed because bytes > MAX_APPEND_LIMIT
+	else if len(bytes) > CHUNK_SIZE - len(os.path.getsize(chunk_handle + ".chunk")):
+		# FIXME: this logic should be moved to append_request see Nuclino API for more information
+		return 2 # The operation failed because bytes > The amount of space left on the chunk
+	else:
+		# use the chunk_handle to create the cache file
+		with open(chunk_handle + '.chunk.' + datetime.datetime.now() + 'cache', 'x') as cache: # using x 'create only' mode so writing will fail if cache file already exists FIXME
+			# dump the recieved bytes into the cache file
+			json.dump(bytes, cache)
+			return 0
+	return 3 # ya--- idk
 
 @app.route("/append-request")
 def append_request():
+	# use the chunk_handle to write the buffer to the File
+	# send append_request to Replicas
+	# return int
     abort(501)
     return ""
