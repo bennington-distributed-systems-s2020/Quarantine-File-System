@@ -12,14 +12,16 @@ from chunkhandler import *
 
 # Interface for master state
 class MetadataStorage:
-    def __init__(self, logfile_path):
-        self.logfile_path = logfile_path
+    def __init__(self, checkpoint_path, log_path):
+        self.checkpoint_path = checkpoint_path
+        self.log_path = log_path
         self.store = FileMap()
         self.chunkhandler = ChunkHandler()
 
-    def retrieveStorage():
+    # Call metadata instance. Static singleton function
+    def retrieveStorage(check = 'checkpoint.json', log = 'logs.json'):
         nonexist = MetadataStorage.__instance
-        return MetadataStorage if nonexist else MetadataStorage.__instance
+        return MetadataStorage(check, log) if nonexist else MetadataStorage.__instance
 
     # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
@@ -86,11 +88,13 @@ class MetadataStorage:
     # This function needs to be called on master startup
     def recover(self):
         # Restore the state if log file exists
-        if os.path.exist(self.logfile):
-            with open(self.logfile, "w+") as logfile:
-                # Load JSON from each line. THIS IS ASSUMING JSON FOR EACH LOG
-                capture = json.loads(i)
-                for i in logfile.readlines():
+        if os.path.exist(self.checkpoint_path):
+            with open(self.checkpoint_path, "r") as checkpoint_file:
+                capture = json.load(checkpoint_file)
+                self.store = FileMap(capture)
+
+            with open(self.log_path, "r") as log_file:
+                for i in log_file.readlines():
                     if self.store != {}:
                         if "mutate" in capture:
                             pass
@@ -98,9 +102,6 @@ class MetadataStorage:
                             pass
                         if "create" in capture:
                             pass
-                    else:
-                        # Restores checkpoint (only should run on first line)
-                        self.store = FileMap(capture)
         else:
             return FileMap()
 
@@ -114,14 +115,14 @@ class MetadataStorage:
         }
 
         # read
-        with open(self.logfile_path) as json_file:
+        with open(self.log_path) as json_file:
             logs = json.load(json_file)
 
         # appends to the current list of logs
         logs["logs"].append(new_log)
 
         # write
-        with open(self.logfile_path, 'w') as json_file:
+        with open(self.log_path, 'w') as json_file:
             json.dump(logs, json_file, indent = 2)
 
         # checks the logs.json size and trigger create_checkpoint if needed
@@ -132,5 +133,5 @@ class MetadataStorage:
     # Creates a checkpoint in master.json when logs.json gets bigger than a specific limit we need to set
     # This function is triggered by write_to_log() above
     def create_checkpoint(self):
-        print("CRETE_CHECKPOINT")
+        print("CREATE_CHECKPOINT")
         # self.store.checkpoint()
