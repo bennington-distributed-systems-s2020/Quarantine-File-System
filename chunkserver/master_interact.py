@@ -63,6 +63,7 @@ def chunk_inventory() -> dict:
         Key: "mutating" Value: mutating (whether the file is being mutated)
         Key: "lease" Value: lease_timestamp (timestamp of the last timestamp
             the chunk has a lease. ISO 8601 format: "2010-04-20T20:08:21.634121")
+        Key: "size" Value: size (size of the chunk minus the first 16 bytes)
     """
     try:
         #get the number of files to return
@@ -75,7 +76,7 @@ def chunk_inventory() -> dict:
 
         for chunk in chunks_list:
             f = open(config["CHUNK_PATH"] + chunk, 'rb')
-            information = {'chunk_handle': '', 'mutating': '', 'lease': ''}
+            information = {'chunk_handle': '', 'mutating': '', 'lease': '', 'size': ''}
 
             chunk_handle = chunk.split('.')[0]
             information['chunk_handle'] = chunk_handle
@@ -96,6 +97,9 @@ def chunk_inventory() -> dict:
             #https://www.w3docs.com/snippets/javascript/the-right-json-date-format.html
             #https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
             information['lease'] = lease_time.isoformat() + 'Z'
+            information['size'] = os.path.getsize(config["CHUNK_PATH"] + chunk) - 16
+
+            f.close()
 
             chunk_inventory[chunk_handle] = information
 
