@@ -21,17 +21,34 @@ class FileMap:
     def process_path(path):
         return path.split("/")
 
-    # Return 
+    # Return dictionary that contains the state of the FileMap
     def checkpoint(self):
         return {
                 "files":self.files, 
                 "chunkhandles":self.chunkhandle_map
                }
 
-    def retrieve(self, path, index):
+    def retrieve(self, path, index, container = False):
+        if not container: container = self.files
         path = path if not type(path) == type('string') else process_path(path)
-        if path.length() > 2:
-            return retrieve(path, index)
+        content = self.files[path[0]]
+        if path.length() == 1:
+            return content[index]
+        else:
+            return self.retrieve(path[1:], index, content)
+
+    def update(self, path, index, container = False, value)
+        if not container: container = self.files
+        path = path if not type(path) == type('string') else process_path(path)
+        content = self.files[path[0]]
+        if path.length() == 1:
+            if content.length() - 1 <= index:
+                content[index] = value
+                return content
+            else:
+                content[index] += [value[0:2]]
+        else:
+            return self.update(path[1:], index, content, value)
 
     #Add an active server or remove an inactive one
     def toggle(self, chunkserver, on):
