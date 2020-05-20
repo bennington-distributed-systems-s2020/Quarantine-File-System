@@ -11,25 +11,24 @@ app = Flask(__name__)
 def example():
     return "Chunkserver Flask API!"
 
-@app.route("/create/<chunk_handle>/<mutation>/<data>")
-def create(chunk_handle, mutation, data):
-    lease = lease(chunk_handle)
-    chunk_file = {}
-    chunk_file["chunk"] = []
-    chunk_file["chunk"].append({
-            "name" : chunk_handle,
-            "mutable" : mutation,
-            "lease" : lease,
-            "ISO date_time" : lease_time.isoformat(),
-            "data" : data
-    })
-    with open(chunk_handle + '.txt', 'w') as chunk_file:
-        json.dump(chunk, chunk_file)
-        if json.load(chunk_file):
-                success = 1
-        else:
-                success = 0
-    return success
+@app.route("/create/<chunk_handle>")
+def create(chunk_handle):
+	chunk_file = {}
+	chunk_file["chunk"] = []
+	chunk_file["chunk"].append({
+        	"name" : chunk_handle,
+        	"mutable": 0,
+		"lease": 0, 
+		"ISO_lease_time": 00000000, 
+		"lease_time":00000000
+    	})
+	with open(chunk_handle + '.txt', 'w') as chunk:
+		json.dump(chunk_file, chunk)
+		if json.load(chunk):
+			success = 1
+		else:
+			success = 0
+		return success
 
 #lease: check whether a chunk has a lease or not
 @app.route("/lease", strict_slashes=False, methods=['GET', 'POST'])
@@ -90,10 +89,17 @@ def lease_grant():
         app.logger.error("Exception.", exc_info = True)
         abort(500)
 
-@app.route("/read") #/<int:chunk_handle>,<int:start_byte>,<int:byte_range>
-def read():#chunk_handle, start_byte, byte_range):
-    abort(501)
-    return ""
+@app.route("/read/<int:chunk_handle>,<int:start_byte>,<int:byte_range>")
+def read(chunk_handle, start_byte, byte_range):
+	with open(chunk_handle + '.txt') as c_file:
+		chunk_data = c_file.seek(start_byte)
+		json_data = json.load(chunk_data)
+		return_list = []
+		for x in range(0, byte_range):
+			python_data = json_data.readline()
+			return_list.append(python_data)
+
+	return return_list
 
 @app.route("/append")
 def append():
