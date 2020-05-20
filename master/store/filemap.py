@@ -18,12 +18,20 @@ class FileMap:
         #each filename-> [[chunkhandle, size], [chunkhandle2, size], ...]
         self.chunkhandle_map = {} if not state else ["chunkhandles"]
 
+    def process_path(path):
+        return path.split("/")
+
     # Return 
     def checkpoint(self):
         return {
                 "files":self.files, 
                 "chunkhandles":self.chunkhandle_map
                }
+
+    def retrieve(self, path, index):
+        path = path if not type(path) == type('string') else process_path(path)
+        if path.length() > 2:
+            return retrieve(path, index)
 
     #Add an active server or remove an inactive one
     def toggle(self, chunkserver, on):

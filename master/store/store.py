@@ -12,9 +12,9 @@ from chunkhandler import *
 
 # Interface for master state
 class MetadataStorage:
-    def __init__(self, checkpoint_path, log_path):
+    def __init__(self, logfile_path, checkpoint_path):
+        self.logfile_path = logfile_path
         self.checkpoint_path = checkpoint_path
-        self.log_path = log_path
         self.store = FileMap()
         self.chunkhandler = ChunkHandler()
 
@@ -85,28 +85,27 @@ class MetadataStorage:
 
     # Recovers the master's state on startup
     # Uses the latest checkpoint (master.json) if available and then reads logs (logs.json)
-    # This function needs to be called on master startup
+    # This function needs to be called at master startup
     def recover(self):
-        # Restore the state if log file exists
-        if os.path.exist(self.checkpoint_path):
-            with open(self.checkpoint_path, "r") as checkpoint_file:
-                capture = json.load(checkpoint_file)
-                self.store = FileMap(capture)
+        # Restore the latest checkpoint from checkpoint.json 
+        with open(self.checkpoint_path) as json_file:
+            checkpoint = json.load(json_file) 
+        # update current state   
+        self.store.files = checkpoint["files"]
+        self.store.chunkhandle_map = checkpoint["chunkhandles"]
 
-            with open(self.log_path, "r") as log_file:
-                for i in log_file.readlines():
-                    if self.store != {}:
-                        if "mutate" in capture:
-                            pass
-                        if "delete" in capture:
-                            pass
-                        if "create" in capture:
-                            pass
-        else:
-            return FileMap()
+        # Plays logs (from logs.json) on top of the current state
+        with open(self.logfile_path) as json_file:
+            logs = json.load(json_file)
+            
+            for log in logs:
+                # need to decide on action types and parameters
+
 
     # Writes a log to logs.json
     # This function is called every time some important operation has been executed
+    # Call example:
+    # self.write_to_log("DELETE", {"filename": "test.txt", "chunk_index": 3})
     def write_to_log(self, action_type, details):
         # creates a new log
         new_log = {
@@ -133,5 +132,5 @@ class MetadataStorage:
     # Creates a checkpoint in master.json when logs.json gets bigger than a specific limit we need to set
     # This function is triggered by write_to_log() above
     def create_checkpoint(self):
-        print("CREATE_CHECKPOINT")
-        # self.store.checkpoint()
+        with open(self.checkpoint_path, 'w') as json_file:
+            json.dump(self.store.checkpoint(), json_file, indent = 2)
