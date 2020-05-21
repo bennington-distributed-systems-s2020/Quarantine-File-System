@@ -104,11 +104,13 @@ class MetadataStorage:
 
         # Plays logs (from logs.json) on top of the current state
         with open(self.logfile_path) as json_file:
-            logs = json.load(json_file)
+            log_file = json.load(json_file)
             
-            for log in logs:
-                pass
-                # need to decide on action types and parameters
+            for log in log_file["logs"]:
+                function_name = log["function_name"]
+                arguments = log["arguments"]
+                # calls a given function with arguments on current class' state
+                getattr(self,  function_name)(*arguments)
 
 
     # Writes a log to logs.json
