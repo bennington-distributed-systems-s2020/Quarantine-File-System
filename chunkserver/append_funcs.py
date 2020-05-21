@@ -38,7 +38,7 @@ def append(chunk_handle: str, data: str) -> int:
     else:
         # use the chunk_handle to create the cache file
         #Q: changed some code to write data as bytes
-        with open(config["CHUNK_PATH"] + chunk_handle + '.chunk.' + str(datetime.datetime.now()) + 'cache', 'xb') as cache: # using x 'create only' mode so writing will fail if cache file already exists FIXME
+        with open(config["CHUNK_PATH"] + chunk_handle + '.chunk.' + str(datetime.datetime.now()) + '.cache', 'xb') as cache: # using x 'create only' mode so writing will fail if cache file already exists FIXME
             # dump the recieved bytes into the cache file
             #json.dump(data, cache)
             cache.write(data)
