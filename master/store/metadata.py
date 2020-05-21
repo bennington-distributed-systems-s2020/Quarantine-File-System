@@ -12,16 +12,23 @@ from chunkhandler import *
 
 # Interface for master state
 class MetadataStorage:
+    instance = None
     def __init__(self, logfile_path, checkpoint_path):
         self.logfile_path = logfile_path
         self.checkpoint_path = checkpoint_path
         self.store = FileMap()
         self.chunkhandler = ChunkHandler()
+        isInstance = self
+
+    def __del__(self):
+        instance = None
+        del self
 
     # Call metadata instance. Static singleton function
+    # singleton help: https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
     def retrieveStorage(check = 'checkpoint.json', log = 'logs.json'):
-        nonexist = MetadataStorage.__instance
-        return MetadataStorage(check, log) if nonexist else MetadataStorage.__instance
+        exist = bool(MetadataStorage.instance)
+        return MetadataStorage(check, log) if not exist else MetadataStorage.instance
 
     # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
@@ -100,6 +107,7 @@ class MetadataStorage:
             logs = json.load(json_file)
             
             for log in logs:
+                pass
                 # need to decide on action types and parameters
 
 
