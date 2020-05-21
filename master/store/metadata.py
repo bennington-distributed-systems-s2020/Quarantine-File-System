@@ -65,17 +65,13 @@ class MetadataStorage:
             return "Path already exists"
 
     # Verify file or directory exists
-    # If string ends with `/`, a directory is created
+    # If string ends with `/`, a directory is searched
     def verify_path(self, filename):
         return self.store.verify_path()
 
     # Remove chunkhandle or remove all chunkhandles from file if none are specified
     def remove(self, filename, chunk_index = None):
-        # coulda done `if not chunkhandle:` but i feel like that's dirty
-        if chunkhandle == None:
-            del self.store[filename]
-        else:
-            del self.store[filename][chunkhandle]
+        return self.store.remove(filename, chunk_index)
 
     # Access filemap function of the same name. Add an active server or
     # remove an inactive one
@@ -83,12 +79,12 @@ class MetadataStorage:
         self.store.toggle(chunkserver, on)
 
     # List active chunkservers
-    def locate():
+    def locate(self):
         return self.store.list_chunkservers()
 
     #TODO Implement count in checkpoint
     def get_chunk_handle(self):
-        self.chunkhandler.get_chunk_handle()
+        return self.chunkhandler.get_chunk_handle()
 
     # Recovers the master's state on startup
     # Uses the latest checkpoint (master.json) if available and then reads logs (logs.json)

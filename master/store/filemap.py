@@ -78,7 +78,6 @@ class FileMap:
             content =  self.make_path(path[1:], False, path[-1]=="", container[path[0]])
             return content
             
-            
     def verify_path(self, path, container = False):
         path = path if not type(path) == type('string') else process_path(path)
         if not container: container = self.files
@@ -86,9 +85,28 @@ class FileMap:
             return path[0] in container
         else:
             return verify_path(path[1:], content[path[0]])
-        
 
-
+    def remove(self, path, index = None, container = False):
+        if not container:
+            if self.verify(path):
+                if path[-1] == "":
+                    del path[-1]
+                self.files = self.remove(path[1:],container=self.files[""])
+                return True
+            else:
+                return False
+        else:
+            if path.length() <= 2:
+                if index != None:
+                    del container[path[0]][path[1]]
+                else:
+                    del container[path[0]][path[1]][index]
+                return container
+            else:
+                container = remove(path[1:], index, container[path[0]])
+                return container
+                
+                
     #Add an active server or remove an inactive one
     def toggle(self, chunkserver, on):
         # This is slow right now, but I don't have an intelligent way
@@ -108,6 +126,9 @@ class FileMap:
     def list_chunkservers(self):
         # o(mn) where m is chunkservers and n is chunkhandles 
         #*cries again*
+        #tbh, this is really o(n) since m is generally pretty small
+        #chunkhandles will usually have 3 or 4 chunkhandles so it's not
+        #really `m`
         chunkservers=[]
         for chunkhandle in self.chunkhandle_map:
             for chunkserver in self.chunkhandle_map[chunkhandle]:
