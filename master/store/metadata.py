@@ -6,9 +6,9 @@
 
 import os.path
 import json
-from filemap import *
-from metadata_errors import *
-from chunkhandler import *
+from store.filemap import *
+from store.metadata_errors import *
+from store.chunkhandler import *
 
 # Interface for master state
 class MetadataStorage:
