@@ -4,8 +4,9 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 import master_interact
-MAX_APPEND_LIMIT = 16
-CHUNK_SIZE = 64
+
+with open("config.json") as config_json:
+    config = json.load(config_json)
 
 app = Flask(__name__)
 
@@ -125,9 +126,9 @@ def append():
 	request_json = request.get_json()
 	chunk_handle = request_json['chunk_handle']
 	bytes = request_json['bytes'] # FIXME should typecast as bytes
-	if len(bytes) > MAX_APPEND_LIMIT:
+	if len(bytes) > config["MAX_APPEND_LIMIT"]:
 		return 1 # The operation failed because bytes > MAX_APPEND_LIMIT
-	elif len(bytes) > CHUNK_SIZE - len(os.path.getsize(chunk_handle + ".chunk")):
+	elif len(bytes) > config["CHUNK_SIZE"] - len(os.path.getsize(chunk_handle + ".chunk")):
 		# FIXME: this logic should be moved to append_request see Nuclino API for more information
 		return 2 # The operation failed because bytes > The amount of space left on the chunk
 	else:

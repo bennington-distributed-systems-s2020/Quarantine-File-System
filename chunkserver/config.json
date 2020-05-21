@@ -1,5 +1,7 @@
 {
     "LEASE_EXPIRE_SECONDS": 60,
     "CHUNK_INVENTORY_RANDOM_SELECT": 0.5,
-    "CHUNK_PATH": "./chunk/"
+    "CHUNK_PATH": "./chunk/",
+    "MAX_APPEND_LIMIT": 16,
+    "CHUNK_SIZE": 64
 }
