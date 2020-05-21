@@ -3,7 +3,7 @@ from flask import Flask, request, Response, json, abort
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-import master_interact, lease_grant
+import master_interact
 MAX_APPEND_LIMIT = 16
 CHUNK_SIZE = 64
 
@@ -44,7 +44,7 @@ def lease():
     except (KeyError, IOError, OSError) as e:
         #information on logging found here
         #https://www.scalyr.com/blog/getting-started-quickly-with-flask-logging/
-        app.logger.warning("File {0} not found.".format(request_json['chunk_handle']))
+        app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
     except Exception as e:
         app.logger.error("Exception.", exc_info = True)
@@ -81,11 +81,12 @@ def collect_garbage():
 def lease_grant():
     request_json = request.get_json()
     try:
-        return app.response_class(json.dumps(lease_grant.lease_grant(request_json['chunk_handle'],
+        return app.response_class(json.dumps(master_interact.lease_grant(request_json['chunk_handle'],
                                                                      request_json['timestamp'],
                                                                      request_json['replica'])),
                                   content_type='application/json')
     except (KeyError, IOError, OSError) as e:
+        app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
     except Exception as e:
         app.logger.error("Exception.", exc_info = True)
@@ -126,7 +127,7 @@ def append():
 	bytes = request_json['bytes'] # FIXME should typecast as bytes
 	if len(bytes) > MAX_APPEND_LIMIT:
 		return 1 # The operation failed because bytes > MAX_APPEND_LIMIT
-	else if len(bytes) > CHUNK_SIZE - len(os.path.getsize(chunk_handle + ".chunk")):
+	elif len(bytes) > CHUNK_SIZE - len(os.path.getsize(chunk_handle + ".chunk")):
 		# FIXME: this logic should be moved to append_request see Nuclino API for more information
 		return 2 # The operation failed because bytes > The amount of space left on the chunk
 	else:
