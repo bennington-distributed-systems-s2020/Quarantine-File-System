@@ -144,7 +144,6 @@ class MetadataStorage:
         # read
         with open(self.logfile_path) as json_file:
             logs = json.load(json_file)
-            print(logs)
         # appends to the current list of logs
         logs["logs"].append(new_log)
 

@@ -42,7 +42,6 @@ import json
 from random import randint
 from store import metadata
 
-print(os.getcwd())
 #############----Config---#################
 number_of_replicas_json = "numberOfReplicasConfig.json"
 
