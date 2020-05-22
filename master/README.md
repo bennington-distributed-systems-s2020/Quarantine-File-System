@@ -8,4 +8,4 @@
 
 - `logs.json` - As the name suggests, this file is used for keeping logs persistent in a logical order
 
-- `master.json` - This one might also be referred to as `checkpoint.json`. It keeps the most recent PERSISTENT state of master
+- `checkpoint.json` - It keeps the most recent PERSISTENT state of master
