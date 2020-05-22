@@ -50,6 +50,9 @@ class MetadataStorage:
         except IndexError:
             raise ChunkIndexError(filename, index)
 
+        # logging
+        self.write_to_log("mutate_chunk", [filename, chunk_index, size])
+
     # Append a new chunk to file
     def create_chunk(self, filename, chunkhandle, chunkservers):
         try:
@@ -57,12 +60,18 @@ class MetadataStorage:
             #TODO Toggle all chunkservers list to `on`
         except KeyError:
             raise FileNameKeyError(filename)
+        
+        # logging
+        self.write_to_log("create_chunk", [filename, chunkhandle, chunkservers])
 
     # Create file or directory with no chunks if it doesnt exist
     # If string ends with `/`, a directory is created
     def create_path(self, filename):
         if not self.store.make_path:
             return "Path already exists"
+        
+        # logging
+        self.write_to_log("create_path", [filename])
 
     # Verify file or directory exists
     # If string ends with `/`, a directory is created
@@ -76,11 +85,17 @@ class MetadataStorage:
             del self.store[filename]
         else:
             del self.store[filename][chunkhandle]
+        
+        # logging
+        self.write_to_log("remove", [filename, chunk_index])
 
     # Access filemap function of the same name. Add an active server or
     # remove an inactive one
     def toggle(self, chunkserver,on=True):
         self.store.toggle(chunkserver, on)
+
+        # logging
+        self.write_to_log("toggle", [chunkserver, on])
 
     # List active chunkservers
     def locate():
