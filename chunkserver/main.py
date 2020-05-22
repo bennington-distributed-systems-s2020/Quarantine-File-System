@@ -1,7 +1,10 @@
 from flask import Flask, request, Response, json, abort
 #from werkzeug.utils import secure_filename
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
+
+import base64
 
 import master_interact, append_funcs
 
@@ -98,17 +101,32 @@ def lease_grant():
         app.logger.error("Exception.", exc_info = True)
         abort(500)
 
-@app.route("/read/<int:chunk_handle>,<int:start_byte>,<int:byte_range>")
-def read(chunk_handle, start_byte, byte_range):
-	with open(chunk_handle + '.chunk') as c_file:
-		chunk_data = c_file.seek(start_byte + 9) #9 first information bytes
-		json_data = json.load(chunk_data)
-		return_list = []
-		for x in range(0, byte_range):
-			python_data = json_data.readline()
-			return_list.append(python_data)
+@app.route("/read/", strict_slashes=False, methods=['GET', 'POST'])
+def read():
+    request_json = request.get_json()
+    try:
+        chunk_handle = request_json['chunk_handle']
+        start_byte = request_json['start_byte']
+        byte_range = request_json['byte_range']
+        b64_encoded_return_bytes = ""
 
-	return return_list
+        with open(config["CHUNK_PATH"] + chunk_handle + '.chunk') as c_file:
+            c_file.seek(start_byte + 9) #9 first information bytes
+            return_bytes = c_file.read(byte_range)
+            b64_encoded_return_bytes = base64.b64encode(return_bytes).decode()
+            #json_data = json.load(chunk_data)
+            #return_list = []
+            #for x in range(0, byte_range):
+            #        python_data = json_data.readline()
+            #        return_list.append(python_data)
+
+        return app.response_class(json.dumps(b64_encoded_return_bytes))
+    except (KeyError, IOError, OSError) as e:
+        app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
+        abort(400)
+    except Exception as e:
+        app.logger.error("Exception.", exc_info = True)
+        abort(500)
 
 @app.route("/append", strict_slashes=False, methods=['GET', 'POST'])
 def append():
