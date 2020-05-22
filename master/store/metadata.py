@@ -5,17 +5,30 @@
 """
 
 import os.path
-from filemap import *
-from metadata_errors import *
-
 import json
+from store.filemap import *
+from store.metadata_errors import *
+from store.chunkhandler import *
 
 # Interface for master state
 class MetadataStorage:
+    instance = None
     def __init__(self, logfile_path, checkpoint_path):
         self.logfile_path = logfile_path
         self.checkpoint_path = checkpoint_path
         self.store = FileMap()
+        self.chunkhandler = ChunkHandler()
+        isInstance = self
+
+    def __del__(self):
+        instance = None
+        del self
+
+    # Call metadata instance. Static singleton function
+    # singleton help: https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
+    def retrieveStorage(check = 'checkpoint.json', log = 'logs.json'):
+        exist = bool(MetadataStorage.instance)
+        return MetadataStorage(check, log) if not exist else MetadataStorage.instance
 
     # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
@@ -48,21 +61,20 @@ class MetadataStorage:
         except KeyError:
             raise FileNameKeyError(filename)
 
-    # Create file with no chunks if it doesnt exist
-    # tbh, i kind of want to move this code into create_chunk
-    def create_file(self, filename):
-        if filename not in store.files:
-            store.files += {filename: {}}
-        else:
-            return "File already exists"
+    # Create file or directory with no chunks if it doesnt exist
+    # If string ends with `/`, a directory is created
+    def create_path(self, filename):
+        if not self.store.make_path:
+            return "Path already exists"
+
+    # Verify file or directory exists
+    # If string ends with `/`, a directory is searched
+    def verify_path(self, filename):
+        return self.store.verify_path()
 
     # Remove chunkhandle or remove all chunkhandles from file if none are specified
     def remove(self, filename, chunk_index = None):
-        # coulda done `if not chunkhandle:` but i feel like that's dirty
-        if chunkhandle == None:
-            del self.store[filename]
-        else:
-            del self.store[filename][chunkhandle]
+        return self.store.remove(filename, chunk_index)
 
     # Access filemap function of the same name. Add an active server or
     # remove an inactive one
@@ -70,10 +82,14 @@ class MetadataStorage:
         self.store.toggle(chunkserver, on)
 
     # List active chunkservers
-    def locate():
+    def locate(self):
         return self.store.list_chunkservers()
 
-    # Recovers the master's state at startup
+    #TODO Implement count in checkpoint
+    def get_chunk_handle(self):
+        return self.chunkhandler.get_chunk_handle()
+
+    # Recovers the master's state on startup
     # Uses the latest checkpoint (master.json) if available and then reads logs (logs.json)
     # This function needs to be called at master startup
     def recover(self):
@@ -89,6 +105,7 @@ class MetadataStorage:
             logs = json.load(json_file)
             
             for log in logs:
+                pass
                 # need to decide on action types and parameters
 
 
