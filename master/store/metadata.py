@@ -33,7 +33,9 @@ class MetadataStorage:
     # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
         try:
-            return self.store.retrieve(filename, chunk_index)
+            query = self.store[filename][chunk_index]
+            query += [self.store.get_chunkservers(query[0])] #Add chunkserver list
+            return query
         except KeyError:
             raise FileNameKeyError(filename)
         except IndexError:
@@ -44,7 +46,7 @@ class MetadataStorage:
     def mutate_chunk(self, filename, chunk_index, size):
         try:
             # The `1` index wis `size` in `[chunkhandle, size]`
-            self.store.update(filename, chunk_index, [0])
+            self.store[filename][chunk_index][1] = size
         except KeyError:
             raise FileNameKeyError(filename)
         except IndexError:
@@ -56,7 +58,8 @@ class MetadataStorage:
     # Append a new chunk to file
     def create_chunk(self, filename, chunkhandle, chunkservers):
         try:
-            self.store.update(filename, chunk_index, [chunkhandle, 0], chunkservers)
+            self.store[filename] += [chunkhandle, 0]
+            self.store[chunkhandle] = chunkservers
             #TODO Toggle all chunkservers list to `on`
         except KeyError:
             raise FileNameKeyError(filename)
@@ -74,7 +77,7 @@ class MetadataStorage:
         self.write_to_log("create_path", [filename])
 
     # Verify file or directory exists
-    # If string ends with `/`, a directory is created
+    # If string ends with `/`, a directory is searched
     def verify_path(self, filename):
         return self.store.verify_path()
 
@@ -98,12 +101,12 @@ class MetadataStorage:
         self.write_to_log("toggle", [chunkserver, on])
 
     # List active chunkservers
-    def locate():
+    def locate(self):
         return self.store.list_chunkservers()
 
     #TODO Implement count in checkpoint
     def get_chunk_handle(self):
-        self.chunkhandler.get_chunk_handle()
+        return self.chunkhandler.get_chunk_handle()
 
     # Recovers the master's state on startup
     # Uses the latest checkpoint (master.json) if available and then reads logs (logs.json)
@@ -115,7 +118,6 @@ class MetadataStorage:
         # update current state   
         self.store.files = checkpoint["files"]
         self.store.chunkhandle_map = checkpoint["chunkhandles"]
-        self.chunkhandler.chunkHandleCounter = checkpoint["count"]
 
         # Plays logs (from logs.json) on top of the current state
         with open(self.logfile_path) as json_file:
@@ -140,14 +142,14 @@ class MetadataStorage:
         }
 
         # read
-        with open(self.log_path) as json_file:
+        with open(self.logfile_path) as json_file:
             logs = json.load(json_file)
 
         # appends to the current list of logs
         logs["logs"].append(new_log)
 
         # write
-        with open(self.log_path, 'w') as json_file:
+        with open(self.logfile_path, 'w') as json_file:
             json.dump(logs, json_file, indent = 2)
 
         # checks the logs.json size and trigger create_checkpoint if needed
@@ -162,4 +164,4 @@ class MetadataStorage:
     # This function is triggered by write_to_log() above
     def create_checkpoint(self):
         with open(self.checkpoint_path, 'w') as json_file:
-            json.dump(self.store.checkpoint() + {"count": self.chunkhandler.chunkHandleCounter}, json_file, indent = 2)
+            json.dump(self.store.checkpoint(), json_file, indent = 2)
