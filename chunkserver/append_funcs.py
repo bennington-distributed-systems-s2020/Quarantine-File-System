@@ -29,16 +29,16 @@ def append(chunk_handle: str, data: str) -> int:
     data = base64.decodebytes(data.encode())
     if len(data) > config["MAX_APPEND_LIMIT"]:
         return 1 # The operation failed because bytes > MAX_APPEND_LIMIT
-    #Q: added CHUNK_PATH before the directory
+    #Q: added WRITE_BUFFER_PATH to separate the directory for storing the buffer path from the chunks dir
     #Q: also moved the constants to the config.json
     #Q: I also changed the tab to 4 to avoid inconsistent TabError
-    elif len(data) > config["CHUNK_SIZE"] - os.path.getsize(config["CHUNK_PATH"] + chunk_handle + ".chunk"):
+    elif len(data) > config["WRITE_BUFFER_PATH"] - os.path.getsize(config["CHUNK_PATH"] + chunk_handle + ".chunk"):
         # FIXME: this logic should be moved to append_request see Nuclino API for more information
         return 2 # The operation failed because bytes > The amount of space left on the chunk
     else:
         # use the chunk_handle to create the cache file
         #Q: changed some code to write data as bytes
-        with open(config["CHUNK_PATH"] + chunk_handle + '.chunk.' + str(datetime.datetime.now()) + 'cache', 'xb') as cache: # using x 'create only' mode so writing will fail if cache file already exists FIXME
+        with open(config["WRITE_BUFFER_PATH"] + chunk_handle + '.chunk.' + str(datetime.datetime.now()) + 'cache', 'xb') as cache: # using x 'create only' mode so writing will fail if cache file already exists FIXME
             # dump the recieved bytes into the cache file
             #json.dump(data, cache)
             cache.write(data)

@@ -8,6 +8,7 @@ import time, os
 #locations are still hard-coded. I will work on changing that when neccessary
 
 SERVER_ADDRESS = 'http://0.0.0.0:5000/'
+CHUNK_DIR = '../chunk/'
 
 class TestServer(unittest.TestCase):
     def test_live(self):
@@ -15,12 +16,22 @@ class TestServer(unittest.TestCase):
         self.assertTrue(r.status_code == 200)
         self.assertEqual(r.text, "Chunkserver Flask API!")
 
+class TestCreate(unittest.TestCase):
+    def setUp(self):
+        self.test_string = '-1'
+
+    def test_create(self):
+        r = requests.post(SERVER_ADDRESS + 'create', json={'chunk_handle': self.test_string})
+        self.assertEqual(r.status_code, 200)
+        with open(CHUNK_DIR + self.test_string + '.chunk', 'rb') as f:
+            self.assertEqual(f.read(), b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+
 class TestLease(unittest.TestCase):
     def setUp(self):
         self.test_string = '-1'
         self.false_string = '-2'
 
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.close()
@@ -28,10 +39,10 @@ class TestLease(unittest.TestCase):
         self.no_lease = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00' #2019/05/20 20:59:00
         self.big_date = b'\x00\x01\x07\xe3\x05\x14\x14\x3b\x00' #2019/05/20 20:59:00
         self.big_time = b'\x00\x01\x07\xe4\x05\x14\x00\x00\x00' #2020/05/20 00:00:00
-        self.true_lease = b'\x00\x01\x07\xe4\x05\x14\x0f\x12\x00' #2020/05/20 15:03:00
+        self.true_lease = b'\x00\x01\x07\xe4\x05\x16\x0d\x1b\x00' #2020/05/22 13:27:00
 
     def test_lease_false(self):
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.no_lease)
@@ -46,7 +57,7 @@ class TestLease(unittest.TestCase):
         self.assertTrue(r.status_code == 400)
 
     def test_lease_big_date(self):
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.big_date)
@@ -57,7 +68,7 @@ class TestLease(unittest.TestCase):
         self.assertFalse(r.json())
 
     def test_lease_big_time(self):
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.big_time)
@@ -68,7 +79,7 @@ class TestLease(unittest.TestCase):
         self.assertFalse(r.json())
 
     def test_lease_true(self):
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.true_lease)
@@ -79,7 +90,7 @@ class TestLease(unittest.TestCase):
         self.assertTrue(r.json())
 
     def tearDown(self):
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.close()
@@ -90,9 +101,9 @@ class TestLease(unittest.TestCase):
 class testChunkInventory(unittest.TestCase):
     def setUp(self):
         self.test_string = '-1'
-        self.test_data = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00'
+        self.test_data = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00' #2019/05/20 20:59:00
 
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'wb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.test_data)
@@ -103,7 +114,7 @@ class testChunkInventory(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
     def tearDown(self):
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.close()
@@ -115,13 +126,13 @@ class testGarbageCollection(unittest.TestCase):
         self.test_string2 = '-2'
         self.test_data = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00'
 
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'wb')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'wb')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.test_data)
         self.test_chunk.close()
 
-        self.test_chunk = open('../chunk/' + self.test_string2 + '.chunk', 'wb')
+        self.test_chunk = open(CHUNK_DIR + self.test_string2 + '.chunk', 'wb')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.test_data)
@@ -130,8 +141,8 @@ class testGarbageCollection(unittest.TestCase):
     def test_collect_garbage(self):
         r = requests.post(SERVER_ADDRESS + 'collect-garbage', json={'deleted_chunks': [self.test_string, self.test_string2]})
         self.assertEqual(r.status_code, 200)
-        self.assertFalse(os.path.exists('../chunk/' + self.test_string + '.chunk'))
-        self.assertFalse(os.path.exists('../chunk/' + self.test_string2 + '.chunk'))
+        self.assertFalse(os.path.exists(CHUNK_DIR + self.test_string + '.chunk'))
+        self.assertFalse(os.path.exists(CHUNK_DIR + self.test_string2 + '.chunk'))
 
     def tearDown(self):
         pass
@@ -142,7 +153,7 @@ class testLeaseGrant(unittest.TestCase):
         self.test_string = '-1'
         self.test_old_data = b'\x00\x00\x07\xe3\x05\x14\x14\x3b\x00' #2019/05/20 20:59:00
 
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'wb')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'wb')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.write(self.test_old_data)
@@ -155,11 +166,11 @@ class testLeaseGrant(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), 0)
 
-        with open('../chunk/' + self.test_string + '.chunk', 'rb') as f:
+        with open(CHUNK_DIR + self.test_string + '.chunk', 'rb') as f:
             self.assertEqual(f.read(), b'\x00\x01\x07\xe4\x05\x14\x00\x00\x00')
 
     def tearDown(self):
-        self.test_chunk = open('../chunk/' + self.test_string + '.chunk', 'rb+')
+        self.test_chunk = open(CHUNK_DIR + self.test_string + '.chunk', 'rb+')
         self.test_chunk.seek(0)
         self.test_chunk.truncate(0)
         self.test_chunk.close()
