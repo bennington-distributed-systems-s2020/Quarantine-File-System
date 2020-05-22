@@ -117,11 +117,11 @@ class MetadataStorage:
     # This function is called every time some important operation has been executed
     # Call example:
     # self.write_to_log("DELETE", {"filename": "test.txt", "chunk_index": 3})
-    def write_to_log(self, action_type, details):
+    def write_to_log(self, function_name, arguments):
         # creates a new log
         new_log = {
-            "action_type": action_type,
-            "details": details
+            "function_name": function_name,
+            "arguments": arguments
         }
 
         # read
@@ -138,6 +138,9 @@ class MetadataStorage:
         # checks the logs.json size and trigger create_checkpoint if needed
         if len(logs["logs"]) + 1 > 5000: # need to decide on the max size of logs
             self.create_checkpoint()
+            # don't forget to reset the logs file
+            with open(self.log_path, 'w') as json_file:
+                json.dump({ "logs": [] }, json_file, indent = 2)
 
 
     # Creates a checkpoint in master.json when logs.json gets bigger than a specific limit we need to set
