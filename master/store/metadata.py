@@ -52,6 +52,9 @@ class MetadataStorage:
         except IndexError:
             raise ChunkIndexError(filename, index)
 
+        # logging
+        self.write_to_log("mutate_chunk", [filename, chunk_index, size])
+
     # Append a new chunk to file
     def create_chunk(self, filename, chunkhandle, chunkservers):
         try:
@@ -60,12 +63,18 @@ class MetadataStorage:
             #TODO Toggle all chunkservers list to `on`
         except KeyError:
             raise FileNameKeyError(filename)
+        
+        # logging
+        self.write_to_log("create_chunk", [filename, chunkhandle, chunkservers])
 
     # Create file or directory with no chunks if it doesnt exist
     # If string ends with `/`, a directory is created
     def create_path(self, filename):
         if not self.store.make_path:
             return "Path already exists"
+        
+        # logging
+        self.write_to_log("create_path", [filename])
 
     # Verify file or directory exists
     # If string ends with `/`, a directory is searched
@@ -74,12 +83,22 @@ class MetadataStorage:
 
     # Remove chunkhandle or remove all chunkhandles from file if none are specified
     def remove(self, filename, chunk_index = None):
-        return self.store.remove(filename, chunk_index)
+        # coulda done `if not chunkhandle:` but i feel like that's dirty
+        if chunkhandle == None:
+            del self.store[filename]
+        else:
+            del self.store[filename][chunkhandle]
+        
+        # logging
+        self.write_to_log("remove", [filename, chunk_index])
 
     # Access filemap function of the same name. Add an active server or
     # remove an inactive one
     def toggle(self, chunkserver,on=True):
         self.store.toggle(chunkserver, on)
+
+        # logging
+        self.write_to_log("toggle", [chunkserver, on])
 
     # List active chunkservers
     def locate(self):
@@ -102,22 +121,24 @@ class MetadataStorage:
 
         # Plays logs (from logs.json) on top of the current state
         with open(self.logfile_path) as json_file:
-            logs = json.load(json_file)
+            log_file = json.load(json_file)
             
-            for log in logs:
-                pass
-                # need to decide on action types and parameters
+            for log in log_file["logs"]:
+                function_name = log["function_name"]
+                arguments = log["arguments"]
+                # calls a given function with arguments on current class' state
+                getattr(self,  function_name)(*arguments)
 
 
     # Writes a log to logs.json
     # This function is called every time some important operation has been executed
     # Call example:
-    # self.write_to_log("DELETE", {"filename": "test.txt", "chunk_index": 3})
-    def write_to_log(self, action_type, details):
+    # self.write_to_log("function_name", ["arguments", "as", "a", "list", "here"])
+    def write_to_log(self, function_name, arguments):
         # creates a new log
         new_log = {
-            "action_type": action_type,
-            "details": details
+            "function_name": function_name,
+            "arguments": arguments
         }
 
         # read
@@ -134,6 +155,9 @@ class MetadataStorage:
         # checks the logs.json size and trigger create_checkpoint if needed
         if len(logs["logs"]) + 1 > 5000: # need to decide on the max size of logs
             self.create_checkpoint()
+            # don't forget to reset the logs file
+            with open(self.log_path, 'w') as json_file:
+                json.dump({ "logs": [] }, json_file, indent = 2)
 
 
     # Creates a checkpoint in master.json when logs.json gets bigger than a specific limit we need to set
