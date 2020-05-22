@@ -26,9 +26,9 @@ class MetadataStorage:
 
     # Call metadata instance. Static singleton function
     # singleton help: https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
-    def retrieveStorage(check = 'checkpoint.json', log = 'logs.json'):
+    def retrieveStorage(log = 'logs.json', check = 'checkpoint.json'):
         exist = bool(MetadataStorage.instance)
-        return MetadataStorage(check, log) if not exist else MetadataStorage.instance
+        return MetadataStorage(log, check) if not exist else MetadataStorage.instance
 
     # Return metadata in the format [chunkhandle, size, replicas];
     def get_chunk(self, filename, chunk_index):
@@ -79,7 +79,7 @@ class MetadataStorage:
     # Verify file or directory exists
     # If string ends with `/`, a directory is searched
     def verify_path(self, filename):
-        return self.store.verify_path()
+        return self.store.verify_path(filename)
 
     # Remove chunkhandle or remove all chunkhandles from file if none are specified
     def remove(self, filename, chunk_index = None):
@@ -144,7 +144,7 @@ class MetadataStorage:
         # read
         with open(self.logfile_path) as json_file:
             logs = json.load(json_file)
-
+            print(logs)
         # appends to the current list of logs
         logs["logs"].append(new_log)
 

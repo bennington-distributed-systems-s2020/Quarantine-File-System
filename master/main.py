@@ -18,7 +18,8 @@ def example():
 @app.route('/fetch/<string:file_name>/<int:chunk_index>', methods=['GET'])
 def fetch(file_name, chunk_index):
     if metadata_handler.verify_path(file_name) == False:
-        return "invalid file path"
+        error = {"error": "invalid file path"}
+        return jsonify(error)
     
     # since this function takes a list of index, so I used [chunk_index] to make it a list
     json_response = {}

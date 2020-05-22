@@ -1,5 +1,5 @@
 """
-file_name: createFile.py
+file_name: file_management.py
 Date: May 22th, 2020
 Author: Zhihong Li
 
@@ -42,6 +42,7 @@ import json
 from random import randint
 from store import metadata
 
+print(os.getcwd())
 #############----Config---#################
 number_of_replicas_json = "numberOfReplicasConfig.json"
 
@@ -191,6 +192,10 @@ def get_file_chunk_handles(file_path, chunk_index_list):
     return chunk_handles
 
 if __name__ == "__main__":
+    metadata_handler.toggle("127,0,0,1", True)
+    live_server = metadata_handler.locate()
+    print(live_server)
+
     # test get chunk size needed
     assert get_number_of_chunk_needed(-1) == False, "failed test"
     assert get_number_of_chunk_needed("19") == False, "failed test"
@@ -203,14 +208,14 @@ if __name__ == "__main__":
     assert type(metadata_handler.locate()) == list, "failed to get live server list"
 
     # test creating new path
-    assert metadata_handler.create_path("/school/") == """some success return value here""", "failed to create directory"
-    assert metadata_handler.create_path("/school/cs/") == """some success return value here""", "failed to create directory"
-    assert metadata_handler.create_path("/school/music/") == """some success return value here""", "failed to create directory"
+    assert metadata_handler.create_path("/school/") == None, "failed to create directory"
+    assert metadata_handler.create_path("/school/cs/") == None, "failed to create directory"
+    assert metadata_handler.create_path("/school/music/") == None, "failed to create directory" # here since the function is not returning anything
 
     # test verify existing directory path
-    assert metadata_handler.verify_path("/school/") == """some success return value here""", "failed to verify directory"
-    assert metadata_handler.verify_path("/school/cs/") == """some success return value here""", "failed to verify directory"
-    assert metadata_handler.verify_path("/school/music/") == """some success return value here""", "failed to verify directory"
+    assert metadata_handler.verify_path("/school/") == True, "failed to verify directory"
+    assert metadata_handler.verify_path("/school/cs/") == True, "failed to verify directory"
+    assert metadata_handler.verify_path("/school/music/") == True, "failed to verify directory"
 
     # test the method of getting directory's parent directory path
     parent_directory_path = '/'.join("/school/cs/".split('/')[:-2]) + '/'
