@@ -1,6 +1,12 @@
 """
 file_name: createFile.py
+Date: May 22th, 2020
+Author: Zhihong Li
 
+Notice: a. all directory path starts from base directory "/"
+        b. all directory path ends with "/" for example: "/school/"
+                under base "/" directory, the directory "school" ends with "/"
+        
 functionality: Used for creating a new file for a client.
 1. create_new_directory(directory_path)
 here put absolute directory path such as "/school/work/"
@@ -21,14 +27,14 @@ chunk_index: optional
 ---if chunk index is not given, this function will the whole file
 ---otherwise it only removes the chunk has the given index.
 
-
 5. remove_directory(directory_path)
 directory_path eg: "/school/work/"
 this function will remove the directory "work" and everything in it
 if it's valid.
 
-Date: May 21th, 2020
-Author: Zhihong Li
+6. get_file_chunk_handles(file_path, chunk_index_list)
+file_path eg: "/school/work/cs/tree.py"
+chunk_index_list eg: [0] or [0,1,2,3] or [3,5,7,8,9,22]
 """
 
 import os
@@ -82,7 +88,7 @@ def create_new_file(file_path, file_size):
     number_of_chunks_needed = get_number_of_chunk_needed(file_size)
 
     # create new file with number of chunks needed in the metadata
-    for _ in range(1, number_of_chunks_needed):
+    for _ in range(number_of_chunks_needed): ###################3
         # get random live server list according to number of replicas set in config
         live_servers_list = metadata_handler.locate()
         random_server_list = get_servers_list_that_stores_new_file(live_servers_list, number_of_replicas)
@@ -168,8 +174,21 @@ def get_servers_list_that_stores_new_file(live_servers_list, number_of_replicas)
         random_server_list.append(live_servers_list[randomNum])
     return random_server_list
 
+def get_file_chunk_handles(file_path, chunk_index_list):
+    global metadata_handler
 
+    if metadata_handler.verify_path(file_path) != True:
+        return False # invalid file_path
+    if (chunk_index_list == None) or (type(chunk_index_list) != list) or (len(chunk_index_list) <= 0):
+        return False # invalid chunk_index_list
+    chunk_handles = []
+    chunk_index_list_len = len(chunk_index_list)
 
+    for i in range(chunk_index_list_len):
+        curr_chunk_index = chunk_index_list[i]
+        curr_chunk_handle = metadata_handler.get_chunk(file_path, curr_chunk_index)
+        chunk_handles.append(curr_chunk_handle)
+    return chunk_handles
 
 if __name__ == "__main__":
     # test get chunk size needed
@@ -203,6 +222,16 @@ if __name__ == "__main__":
     assert metadata_handler.verify_path("school/cs/fun.txt") == True, "failed to remove a file"
     assert metadata_handler.verify_path("school/cs/hello.txt") == True, "failed to remove a file"
 
+    # test mutate chunk size
+    metadata_handler.mutate_chunk("school/cs/hello.txt", 0, 1000)
+    assert metadata_handler.get_chunk("school/cs/hello.txt", 0)[1] == 1000, "failed to mutate chunk size"
+
+    # test get file chunk handles
+    fun_chunk_handle = get_file_chunk_handles("school/cs/fun.txt", [0])
+    hello_chunk_handle = get_file_chunk_handles("school/cs/hello.txt", [0]) # get first index 0 chunk handle for the hello.txt
+    assert hello_chunk_handle == "2", "failed to get correct chunk handle for the file"
+    assert fun_chunk_handle == "1", "failed to get correct chunk handle for the file"
+
     # test create a new chunk for an existing file
     live_chunk_server_list = ["server1", "server2", "server3"]
     assert metadata_handler.create_chunk("school/cs/fun.txt","2299aac92", live_chunk_server_list) == True, "failed to create new chunk for existing file"
@@ -223,3 +252,4 @@ if __name__ == "__main__":
     assert metadata_handler.remove("school/cs/") == True, "failed to remove a directory that has file in it"
     assert metadata_handler.verify_path("school/cs/fun.txt") == False, "failed to remove a directory that has file in it"
     assert metadata_handler.remove("school/cs/") == False, "failed to remove a directory that has file in it"
+
