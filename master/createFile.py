@@ -22,9 +22,9 @@ chunk_index: optional
 ---otherwise it only removes the chunk has the given index.
 
 
-5. remove_directory(directory_path) ---need to be built
+5. remove_directory(directory_path)
 directory_path eg: "/school/work/"
-this function will remove the directory "work" and everything in it
+this function will remove the directory "work" and everything in itcd 
 if it's valid.
 
 Date: May 21th, 2020
@@ -77,7 +77,7 @@ def create_new_file(file_path, file_size):
     # verify filesize
     if (file_size is None) or (type(file_size) != int) or (file_size < 0) :
         return False
-    if verify_file_parent_directory_path(file_path) is False:
+    if verify_file_parent_directory_path(file_path) == False:
         return False
     number_of_chunks_needed = get_number_of_chunk_needed(file_size)
 
@@ -111,7 +111,7 @@ def create_new_chunk(file_path):
     global metadata_handler
     global number_of_replicas
 
-    if metadata_handler.verify_path(file_path) is False: ########################## return value need to ask five
+    if metadata_handler.verify_path(file_path) == False:
         return False
     
     # get random chunkservers list to store the chunk
@@ -125,7 +125,7 @@ def create_new_chunk(file_path):
 
 def remove_file(file_path):
     global metadata_handler
-    if metadata_handler.verify_path(file_path) is not True:
+    if metadata_handler.verify_path(file_path) != True:
         return False # invalid path
     else:
         metadata_handler.remove(file_path) # remove the file
@@ -139,13 +139,12 @@ def remove_directory(directory_path):
         return False # invalid directory
     
     # if valid, remove it
-    # ###############-------function is not created yet------#############################
-    metadata_handler.remove_directory(directory_path)
+    metadata_handler.remove(directory_path)
     return True
 
 # file size is in byte
 def get_number_of_chunk_needed(file_size):
-    if type(file_size) is not int or file_size < 0:
+    if (type(file_size) != int) or file_size < 0:
         return False # wrong input return False
     one_mb = 1000000 # 1mb = 1000000 bytes
     chunk_size_offset = 16 
