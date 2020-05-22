@@ -24,7 +24,7 @@ chunk_index: optional
 
 5. remove_directory(directory_path)
 directory_path eg: "/school/work/"
-this function will remove the directory "work" and everything in itcd 
+this function will remove the directory "work" and everything in it
 if it's valid.
 
 Date: May 21th, 2020
