@@ -57,14 +57,6 @@ def append_request(chunk_handle: str, client_ip: str) -> int:
             1: The operation failed because the requested chunk has no data in cache to append.
             2: The operation failed because the chunk is too full.
             3: The operation failed for other reasons.
-
-3. Send the serialization to replicas (I'll have to update the API to have a specific append-request command that takes in a serialization that should only be called from a chunkserver to another chunkserver probably)
-4. Check if write could be performed on replicas
-  4.1. If no, wipe write buffer and send cancel signal to primary, which will also wipe its buffer and cancel the write
-  4.2. If yes, continue
-5. Write the data on the replicas then send acknowledgement back to primary
-6. Once primary received acks from all replicas, write on primary
-7. Send acks back to client and complete the append
     """
     #Format of filename for write buffer: <chunk_handle>.<client_ip>.chunktemp
     buffer_filename = config["WRITE_BUFFER_PATH"] + "{0}.{1}.chunktemp".format(chunk_handle, client_ip)
@@ -85,7 +77,7 @@ def append_request(chunk_handle: str, client_ip: str) -> int:
 
     #time to logic
     #if primary: send request to replicas
-    success = True
+    return_code = 0
     chunk_file = open(chunk_filename, 'ab+')
 
     #file locking: lock the chunk being appended to to not cause corruption
@@ -97,10 +89,31 @@ def append_request(chunk_handle: str, client_ip: str) -> int:
     if chunk_file.read(1) == b'\x01':
         #is primary
         try:
-            #send requests to replica
+            #getting replicas
+            with open('./replica.json', 'r+') as f:
+                replica_json = json.load(f)
+                replicas = replica_json[chunk_handle]
+
+            #sending requests to replicas
+            #possible improvement: multithread this
+            for i in replicas:
+                append_request = requests.post("http://{0}/append-request", json={'chunk_handle': self.chunk_handle})
+                if append_request.status_code != 200:
+                    return_code = 3
+                    raise
+                elif append_request.json() != 0:
+                    return_code = append_request.json()
+                    raise
+                else:
+                    continue
+
+            #all replicas succeeded peacefully
+            #time to append
             append_file(append_file, chunk_file)
+
         except:
-            success = False
+            if return_code == 0:
+                return_code = 3
     else:
         append_file(append_file, chunk_file)
 
@@ -113,10 +126,7 @@ def append_request(chunk_handle: str, client_ip: str) -> int:
         chunk_file.seek(1)
         chunk_file.write(b'\x00')
 
-    if success:
-        return 0
-    else:
-        return 3
+    return return_code
 
 #support function for appending from 1 file to another
 def append_file(from_file, to_file):
