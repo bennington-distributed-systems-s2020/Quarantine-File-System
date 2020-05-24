@@ -12,7 +12,7 @@ functionality: Used for creating a new file for a client.
 here put absolute directory path such as "/school/work/"
 You can only create one directory at an existing directory at a time
 
-2. create_new_file(file_path, file_size)
+2. create_file(file_path, file_size)
 file path eg: "/school/work/fun.txt"
 file size: number of bytes of the file you wanna create and append data to.
 
@@ -39,7 +39,6 @@ chunk_index_list eg: [0] or [0,1,2,3] or [3,5,7,8,9,22]
 
 import os
 import json
-from time import sleep
 from random import randint
 from store import metadata
 
@@ -56,6 +55,19 @@ metadata_handler = metadata.MetadataStorage.retrieveStorage()
 live_chunk_server_set = set()
 ####################################
 
+
+def update_live_chunk_server():
+    global metadata_handler
+    global live_chunk_server_set
+    while True:
+        # after 30s if chunkserver did not heartbeat master, we will remove
+        # the chunkserver from available chunkserver list.
+        live_chunk_server_list = metadata_handler.locate()
+        sleep(30)
+        if live_chunk_server_set.issuperset(live_chunk_server_list) == False:
+            for chunk_server in live_chunk_server_list:
+                if chunk_server not in live_chunk_server_set:
+                    metadata_handler.toggle(chunk_server, False)
 
 def verify_file_parent_directory_path(file_path):
     global metadata_handler
@@ -191,18 +203,6 @@ def get_file_chunk_handles(file_path, chunk_index_list):
         chunk_handles.append(curr_chunk_handle)
     return chunk_handles
 
-def update_live_chunk_server():
-    global metadata_handler
-    global live_chunk_server_set
-    while True:
-        live_chunk_server_list = metadata_handler.locate()
-        sleep(30)
-        # set chunkserver unavailable if chunkserver is not in the live_chunk_server_set
-        # after 30s
-        if live_chunk_server_set.isdisjoint(live_chunk_server_list) == True:
-            for chunk_server in live_chunk_server_list:
-                if chunk_server not in live_chunk_server_set:
-                    metadata_handler.toggle(chunk_server, False)
 
 if __name__ == "__main__":
     metadata_handler.toggle("127,0,0,1", True)

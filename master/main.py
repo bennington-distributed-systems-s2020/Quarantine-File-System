@@ -23,6 +23,7 @@ def fetch(file_name, chunk_index):
     :param chunk_index: A specific part of the file being requested 
     :return: chunk handle and chunk locations as JSON
     """
+    global metadata_handler
     if metadata_handler.verify_path(file_name) == False:
         error = {"error": "invalid file path"}
         return jsonify(error)
@@ -46,6 +47,7 @@ def heartbeat(chunk_server,chunk_server_state):
         return 400
     try:
         global live_chunk_server_set
+        global metadata_handler
         metadata_handler.toggle(chunk_server, chunk_server_state)
         if chunk_server_state == False:
             live_chunk_server_set.remove(chunk_server)
@@ -65,6 +67,5 @@ def lease_request():
     """
     return True
 
-
 if __name__ == "__main__":
-    update_live_chunk_server() # this function runs forever
+    update_live_chunk_server() # update available chunkserver, every 30s, runs forever
