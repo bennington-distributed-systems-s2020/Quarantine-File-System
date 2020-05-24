@@ -1,5 +1,6 @@
 {
     "LEASE_EXPIRE_SECONDS": 60,
+    "HEARTBEAT_DELAY": 60,
     "CHUNK_INVENTORY_RANDOM_SELECT": 0.5,
     "CHUNK_PATH": "./chunk/",
     "WRITE_BUFFER_PATH": "./buffer/",

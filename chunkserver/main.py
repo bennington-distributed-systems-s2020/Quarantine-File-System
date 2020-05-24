@@ -11,6 +11,9 @@ import master_interact, append_funcs
 with open("config.json") as config_json:
     config = json.load(config_json)
 
+with open("chunkserver.json") as chunkserver_json:
+    chunkserver_config = json.load(chunkserver_json)
+
 app = Flask(__name__)
 
 @app.route("/")
