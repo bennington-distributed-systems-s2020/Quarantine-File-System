@@ -63,7 +63,6 @@ def verify_file_parent_directory_path(file_path):
     # get file parent direcoty path
     parent_directory_path = get_file_parent_directory_path(file_path)
 
-#################### need to check return value of the verify function of metadata_handler with FIVE#####################
    # check parent_directory_path directory exist, if not return False 
     if metadata_handler.verify_path(parent_directory_path) == True:
         return True
@@ -88,7 +87,7 @@ def create_new_file(file_path, file_size):
     number_of_chunks_needed = get_number_of_chunk_needed(file_size)
 
     # create new file with number of chunks needed in the metadata
-    for _ in range(number_of_chunks_needed): ###################3
+    for _ in range(number_of_chunks_needed): 
         # get random live server list according to number of replicas set in config
         live_servers_list = metadata_handler.locate()
         random_server_list = get_servers_list_that_stores_new_file(live_servers_list, number_of_replicas)
@@ -96,8 +95,8 @@ def create_new_file(file_path, file_size):
         # get chunk handle
         chunk_handle = metadata_handler.get_chunk_handle()
         # assign new chunks to different servers all the time. distribute chunks well
-        metadata_handler.create_chunk(file_path, chunk_handle, random_server_list) #######verify if this function takes a list of chunkserver?
-    return True # success
+        metadata_handler.create_chunk(file_path, chunk_handle, random_server_list) #takes a list of chunkserver
+    return ######################## return the new metadata of the file
 
 def create_new_directory(directory_path):
     global metadata_handler
@@ -107,7 +106,7 @@ def create_new_directory(directory_path):
 
     # verify parent directory
     if verify_file_parent_directory_path(parent_directory_path) == False:
-        return False ################## ask five about what the function returns.
+        return False 
     
     # if valid, add the new directory in the metadata
     metadata_handler.create_path(directory_path)
@@ -122,11 +121,11 @@ def create_new_chunk(file_path):
     
     # get random chunkservers list to store the chunk
     live_chunkservers_list = metadata_handler.locate()
-    new_chunk_hundle = metadata_handler.get_chunk_handle() ################## problem line no return value
+    new_chunk_hundle = metadata_handler.get_chunk_handle() 
     random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunkservers_list, number_of_replicas)
 
     # create new chunk for chunkservers on the random list
-    metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)  ######### ask takes a list of servers?
+    metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
     return True # success
 
 def remove_file(file_path):
