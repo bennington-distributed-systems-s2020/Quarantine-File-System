@@ -7,7 +7,7 @@ import time, os
 
 #locations are still hard-coded. I will work on changing that when neccessary
 
-SERVER_ADDRESS = 'http://0.0.0.0:5000/'
+SERVER_ADDRESS = 'http://0.0.0.0:8000/'
 CHUNK_DIR = '../chunk/'
 
 class TestServer(unittest.TestCase):

@@ -1,7 +1,7 @@
 #append_funcs.py - implementation of commands for appending
 #Quang Tran - 05 20 20 mm dd yy
 
-import os, datetime, random, math, json, logging, base64
+import os, datetime, random, math, json, logging, fcntl, base64
 import dateutil.parser
 
 with open("config.json") as config_json:
@@ -32,7 +32,7 @@ def append(chunk_handle: str, data: str) -> int:
     #Q: added WRITE_BUFFER_PATH to separate the directory for storing the buffer path from the chunks dir
     #Q: also moved the constants to the config.json
     #Q: I also changed the tab to 4 to avoid inconsistent TabError
-    elif len(data) > config["WRITE_BUFFER_PATH"] - os.path.getsize(config["CHUNK_PATH"] + chunk_handle + ".chunk"):
+    elif len(data) > config["CHUNK_SIZE"] - os.path.getsize(config["WRITE_BUFFER_PATH"] + chunk_handle + ".chunk"):
         # FIXME: this logic should be moved to append_request see Nuclino API for more information
         return 2 # The operation failed because bytes > The amount of space left on the chunk
     else:
@@ -45,7 +45,7 @@ def append(chunk_handle: str, data: str) -> int:
             return 0
     return 3 # ya--- idk
 
-def append_request(chunk_handle: str) -> int:
+def append_request(chunk_handle: str, client_ip: str) -> int:
     """
     Request to append the sent data. Note that the client shold only call
     this on the primary chunk.
@@ -55,6 +55,77 @@ def append_request(chunk_handle: str) -> int:
         int: An int denoting the status of the request.
             0: The operation succeeded.
             1: The operation failed because the requested chunk has no data in cache to append.
-            2: The operation failed for other reasons.
+            2: The operation failed because the chunk is too full.
+            3: The operation failed for other reasons.
+
+3. Send the serialization to replicas (I'll have to update the API to have a specific append-request command that takes in a serialization that should only be called from a chunkserver to another chunkserver probably)
+4. Check if write could be performed on replicas
+  4.1. If no, wipe write buffer and send cancel signal to primary, which will also wipe its buffer and cancel the write
+  4.2. If yes, continue
+5. Write the data on the replicas then send acknowledgement back to primary
+6. Once primary received acks from all replicas, write on primary
+7. Send acks back to client and complete the append
     """
-    return 2
+    #Format of filename for write buffer: <chunk_handle>.<client_ip>.chunktemp
+    buffer_filename = config["WRITE_BUFFER_PATH"] + "{0}.{1}.chunktemp".format(chunk_handle, client_ip)
+    chunk_filename = config["CHUNK_PATH"] + chunk_handle + ".chunk"
+
+    #check if file exists
+    try:
+        append_file = open(buffer_filename, 'rb')
+    except:
+        return 1
+
+    #check if write could be performed
+    remaining_size = config["CHUNK_SIZE"] - os.path.getsize(chunk_filename)
+    if os.path.getsize(buffer_filename) > remaining_size:
+        os.remove(buffer_filename)
+        return 2
+
+
+    #time to logic
+    #if primary: send request to replicas
+    success = True
+    chunk_file = open(chunk_filename, 'ab+')
+
+    #file locking: lock the chunk being appended to to not cause corruption
+    #https://stackoverflow.com/questions/11853551/python-multiple-users-append-to-the-same-file-at-the-same-time
+    #https://docs.python.org/3/library/fcntl.html#fcntl.flock
+    fcntl.flock(chunk_file, fcntl.LOCK_EX)
+
+    chunk_file.seek(1)
+    if chunk_file.read(1) == b'\x01':
+        #is primary
+        try:
+            #send requests to replica
+            append_file(append_file, chunk_file)
+        except:
+            success = False
+    else:
+        append_file(append_file, chunk_file)
+
+    fcntl.flock(chunk_file, fcntl.LOCK_UN)
+    append_file.close()
+    chunk_file.close()
+
+    #take off lease
+    with open(chunk_filename, 'rb+') as chunk_file:
+        chunk_file.seek(1)
+        chunk_file.write(b'\x00')
+
+    if success:
+        return 0
+    else:
+        return 3
+
+#support function for appending from 1 file to another
+def append_file(from_file, to_file):
+    buffer_size = 1024
+    #writing with buffer
+    #from: https://stackoverflow.com/questions/16630789/python-writing-binary-files-bytes
+    while True:
+        buf = from_file.read(buffer_size)
+        if buf:
+            to_file.write(buf)
+        else:
+            break

@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, json, abort
+from flask import Flask, request, Response, json, jsonify, abort
 #from werkzeug.utils import secure_filename
 
 import logging
@@ -36,7 +36,7 @@ def create():
             #})
         with open(config["CHUNK_PATH"] + chunk_handle + '.chunk', 'wb') as chunk:
             chunk.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-        return app.response_class(json.dumps(True), content_type='application/json')
+        return jsonify(True)
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
@@ -51,8 +51,7 @@ def lease():
     try:
         #returning a value with json
         #https://stackoverflow.com/questions/35133318/return-bool-as-post-response-using-flask
-        return app.response_class(json.dumps(master_interact.lease(request_json['chunk_handle'])),
-                                  content_type='application/json')
+        return jsonify(master_interact.lease(request_json['chunk_handle']))
     except (KeyError, IOError, OSError) as e:
         #information on logging found here
         #https://www.scalyr.com/blog/getting-started-quickly-with-flask-logging/
@@ -66,8 +65,7 @@ def lease():
 @app.route("/chunk-inventory/", strict_slashes=False, methods=['GET', 'POST'])
 def chunk_inventory():
     try:
-        return app.response_class(json.dumps(master_interact.chunk_inventory()),
-                                  content_type='application/json')
+        return jsonify(master_interact.chunk_inventory())
     except Exception as e:
         app.logger.error("Exception.", exc_info = True)
         abort(500)
@@ -77,8 +75,7 @@ def chunk_inventory():
 def collect_garbage():
     request_json = request.get_json()
     try:
-        return app.response_class(json.dumps(master_interact.collect_garbage(request_json['deleted_chunks'])),
-                                 content_type='application/json')
+        return jsonify(master_interact.collect_garbage(request_json['deleted_chunks']))
     except (KeyError, IOError, OSError) as e:
         abort(400)
     except Exception as e:
@@ -93,10 +90,9 @@ def collect_garbage():
 def lease_grant():
     request_json = request.get_json()
     try:
-        return app.response_class(json.dumps(master_interact.lease_grant(request_json['chunk_handle'],
-                                                                     request_json['timestamp'],
-                                                                     request_json['replica'])),
-                                  content_type='application/json')
+        return jsonify(master_interact.lease_grant(request_json['chunk_handle'],
+                                                   request_json['timestamp'],
+                                                   request_json['replica']))
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
@@ -123,7 +119,7 @@ def read():
             #        python_data = json_data.readline()
             #        return_list.append(python_data)
 
-        return app.response_class(json.dumps(b64_encoded_return_bytes))
+        return jsonify(b64_encoded_return_bytes)
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
@@ -138,8 +134,7 @@ def append():
     try:
         #Q: wrapped the class in another file to make it look cleaner
         #Q: also renamed the 2nd parameter to "data" because bytes was a built-in type
-        return app.response_class(json.dumps(append_funcs.append(request_json['chunk_handle'], request_json['data'])),
-                                 content_type='application/json')
+        return jsonify(append_funcs.append(request_json['chunk_handle'], request_json['data']))
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
@@ -154,8 +149,7 @@ def append_request():
     # return int
     request_json = request.get_json()
     try:
-        return app.response_class(json.dumps(append_funcs.append_request(request_json['chunk_handle'])),
-                                 content_type='application/json')
+        return jsonify.dumps(append_funcs.append_request(request_json['chunk_handle'], request.remote_addr))
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)

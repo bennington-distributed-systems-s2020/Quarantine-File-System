@@ -82,6 +82,14 @@ def lease_grant(chunk_handle: str, timestamp: str, replica: list) -> int:
         f.write(lease_timestamp_obj.minute.to_bytes(1, 'big')) #write day
         f.write(lease_timestamp_obj.second.to_bytes(1, 'big')) #write day
 
+    #writing replicas into json
+    with open('./replica.json', 'r+') as f:
+        replica_json = json.load(f)
+        replica_json[chunk_handle] = replica
+        f.seek(0)
+        f.truncate(0)
+        json.dump(replica_json, f)
+
     return os.path.getsize(config["CHUNK_PATH"] + chunk_handle + '.chunk') - 9 #9 starting bytes
 
 def chunk_inventory() -> dict:
