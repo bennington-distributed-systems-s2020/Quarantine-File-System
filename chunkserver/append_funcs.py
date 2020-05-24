@@ -97,7 +97,7 @@ def append_request(chunk_handle: str, client_ip: str) -> int:
             #sending requests to replicas
             #possible improvement: multithread this
             for i in replicas:
-                append_request = requests.post("http://{0}/append-request", json={'chunk_handle': self.chunk_handle})
+                append_request = requests.post("http://{0}/append-request", timeout=60, json={'chunk_handle': self.chunk_handle})
                 if append_request.status_code != 200:
                     return_code = 3
                     raise
