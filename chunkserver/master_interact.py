@@ -3,6 +3,7 @@
 #Quang Tran - 05/16/2020
 
 import os, datetime, random, math, json, logging
+import dateutil.parser
 
 with open("config.json") as config_json:
     config = json.load(config_json)
@@ -19,37 +20,77 @@ def lease(chunk_handle: str) -> bool:
         with open(config["CHUNK_PATH"] + chunk_handle + '.chunk', 'rb+') as f:
             #check if the chunk has a lease. If yes, check if it has expired.
             f.seek(1)
-            if f.read(1) == '0':
-                #read here: https://stackoverflow.com/questions/35133318/return-bool-as-post-response-using-flask
-                return json.dumps(False)
+            if f.read(1) == b'\x00':
+                return False
             else:
                 #timedelta: https://docs.python.org/3/library/datetime.html#datetime.timedelta
                 #https://stackoverflow.com/questions/1750644/how-to-use-python-to-calculate-time/48540232
                 curr = datetime.datetime.now()
                 f.seek(2)
-                date = str(f.read(8))[2:-1]
-                time = str(f.read(6))[2:-1]
+                year = int.from_bytes(f.read(2), byteorder='big')
+                month = int.from_bytes(f.read(1), byteorder='big')
+                day = int.from_bytes(f.read(1), byteorder='big')
+                hour = int.from_bytes(f.read(1), byteorder='big')
+                minute = int.from_bytes(f.read(1), byteorder='big')
+                second = int.from_bytes(f.read(1), byteorder='big')
 
-                if int(date[0:4]) < curr.year or int(date[4:6]) < curr.month or int(date[6:8]) < curr.day:
+                #logging.debug("{} {} {} {} {} {}".format(year, month, day, hour, minute, second))
+
+                if year < curr.year or month < curr.month or day < curr.day:
                     f.seek(1)
-                    f.write(b'0')
+                    f.write(b'\x00')
                     return False
                 else: #same year, month and date, as last lease timestamp could not be from the future
                     curr_time = datetime.timedelta(hours = curr.hour,
                                                    minutes = curr.minute,
                                                    seconds = curr.second)
-                    lease_time = datetime.timedelta(hours = int(time[0:2]),
-                                                    minutes = int(time[2:4]),
-                                                    seconds = int(time[4:6]))
+                    lease_time = datetime.timedelta(hours = hour,
+                                                    minutes = minute,
+                                                    seconds = second)
                     if (curr_time - lease_time).total_seconds() > config["LEASE_EXPIRE_SECONDS"]:
                         f.seek(1)
-                        f.write(b'0')
+                        f.write(b'\x00')
                         return False
                     else:
                         return True
 
     except Exception as e:
         raise e
+
+#replicas interaction is dependent on how append is implemented
+#so i will hold off on that
+def lease_grant(chunk_handle: str, timestamp: str, replica: list) -> int:
+    """
+    Grant a lease to a chunk.
+
+    chunk_handle: str: The chunkhandle of the respective chunk.
+    timestamp: str: The timestamp of the lease.
+    replica: list: A list containing the locations of the replica of the primary chunk.
+
+    return: int: The size of the chunk being given the lease.
+    """
+    with open(config["CHUNK_PATH"] + chunk_handle + '.chunk', 'rb+') as f:
+        f.seek(1)
+        f.write(b'\x01') #update to notify that the chunk has a lease
+
+        lease_timestamp_obj = dateutil.parser.parse(timestamp)
+        f.seek(2)
+        f.write(lease_timestamp_obj.year.to_bytes(2, 'big')) #write year
+        f.write(lease_timestamp_obj.month.to_bytes(1, 'big')) #write month
+        f.write(lease_timestamp_obj.day.to_bytes(1, 'big')) #write day
+        f.write(lease_timestamp_obj.hour.to_bytes(1, 'big')) #write day
+        f.write(lease_timestamp_obj.minute.to_bytes(1, 'big')) #write day
+        f.write(lease_timestamp_obj.second.to_bytes(1, 'big')) #write day
+
+    #writing replicas into json
+    with open('./replica.json', 'r+') as f:
+        replica_json = json.load(f)
+        replica_json[chunk_handle] = replica
+        f.seek(0)
+        f.truncate(0)
+        json.dump(replica_json, f)
+
+    return os.path.getsize(config["CHUNK_PATH"] + chunk_handle + '.chunk') - 9 #9 starting bytes
 
 def chunk_inventory() -> dict:
     """
@@ -82,22 +123,22 @@ def chunk_inventory() -> dict:
             information['chunk_handle'] = chunk_handle
 
             f.seek(0)
-            if f.read(1) == '1':
+            if f.read(1) == '\x01':
                 information['mutating'] = True
             else:
                 information['mutating'] = False
 
             f.seek(2)
-            lease_time = datetime.datetime(int(float(f.read(4))), #year
-                                           int(float(f.read(2))), #month
-                                           int(float(f.read(2))), #date
-                                           int(float(f.read(2))), #hour
-                                           int(float(f.read(2))), #minute
-                                           int(float(f.read(2)))) #second
+            lease_time = datetime.datetime(int.from_bytes(f.read(2), byteorder='big'), #year
+                                           int.from_bytes(f.read(1), byteorder='big'), #month
+                                           int.from_bytes(f.read(1), byteorder='big'), #day
+                                           int.from_bytes(f.read(1), byteorder='big'), #hour
+                                           int.from_bytes(f.read(1), byteorder='big'), #minute
+                                           int.from_bytes(f.read(1), byteorder='big')) #second
             #https://www.w3docs.com/snippets/javascript/the-right-json-date-format.html
             #https://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
             information['lease'] = lease_time.isoformat() + 'Z'
-            information['size'] = os.path.getsize(config["CHUNK_PATH"] + chunk) - 16
+            information['size'] = os.path.getsize(config["CHUNK_PATH"] + chunk) - 9 #9 starting bytes
 
             f.close()
 
@@ -118,3 +159,4 @@ def collect_garbage(deleted_chunks: list) -> bool:
             raise e
 
     return True
+
