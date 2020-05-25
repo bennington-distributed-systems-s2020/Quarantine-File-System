@@ -134,7 +134,7 @@ def append():
     try:
         #Q: wrapped the class in another file to make it look cleaner
         #Q: also renamed the 2nd parameter to "data" because bytes was a built-in type
-        return jsonify(append_funcs.append(request_json['chunk_handle'], request_json['data']))
+        return jsonify(append_funcs.append(request_json['chunk_handle'], request.remote_addr, request_json['data_index'], request_json['data']))
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
@@ -149,7 +149,7 @@ def append_request():
     # return int
     request_json = request.get_json()
     try:
-        return jsonify.dumps(append_funcs.append_request(request_json['chunk_handle'], request.remote_addr))
+        return jsonify.dumps(append_funcs.append_request(request_json['chunk_handle'], request.remote_addr, request_json['data_index']))
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
