@@ -110,6 +110,7 @@ def create_new_file(file_path, file_size):
         chunk_handle = metadata_handler.get_chunk_handle()
         # assign new chunks to different servers all the time. distribute chunks well
         metadata_handler.create_chunk(file_path, chunk_handle, random_server_list) #takes a list of chunkserver
+    
     return ######################## return the new metadata of the file
 
 def create_new_directory(directory_path):
@@ -203,9 +204,13 @@ def get_file_chunk_handles(file_path, chunk_index_list):
         chunk_handles.append(curr_chunk_handle)
     return chunk_handles
 
+def get_file_chunk_handle_start_at_index(file_path, start_chunk_index):
+    global metadata_handler
+    # return metadata_handler.get_file(file_path)[start_chunk_index]
+    # write this function in metadata
+
 
 if __name__ == "__main__":
-    metadata_handler.toggle("127,0,0,1", True)
     live_server = metadata_handler.locate()
     print(live_server)
 
