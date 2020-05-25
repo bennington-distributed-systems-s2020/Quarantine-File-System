@@ -32,7 +32,7 @@ def append(chunk_handle: str, client_ip: str, data_index: str, data: str) -> int
     else:
         # use the chunk_handle, client_ip, and data_index to create the cache file
         #Q: changed some code to write data as bytes
-        with open(config["WRITE_BUFFER_PATH"] + chunk_handle + '.' + client_ip + '.' + data_index + '.buffer', 'wb') as buffer: # using w 'open for writing, truncating the file first' mode so writing at the same index will overwrite old buffer data
+        with open("{0}{1}.{2}.{3}.buffer".format(config["WRITE_BUFFER_PATH"], chunk_handle, client_ip, data_index), 'wb') as buffer: # using w 'open for writing, truncating the file first' mode so writing at the same index will overwrite old buffer data
             # dump the recieved data into the buffer file
             buffer.write(data)
             return 0
@@ -43,7 +43,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     Request to append the sent data. Note that the client shold only call
     this on the primary chunk.
         chunk_handle: str. The chunk handle of the chunk
-
+        data_index int. The index of the client's append() call
     Return:
         int: An int denoting the status of the request.
             0: The operation succeeded.
@@ -52,7 +52,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
             3: The operation failed for other reasons.
     """
     #Format of filename for write buffer: <chunk_handle>.<client_ip>.chunktemp
-    buffer_filename = config["WRITE_BUFFER_PATH"] + "{0}.{1}.chunktemp".format(chunk_handle, client_ip)
+    buffer_filename = config["WRITE_BUFFER_PATH"] + "{0}.{1}.{2}.buffer".format(chunk_handle, client_ip, data_index)
     chunk_filename = config["CHUNK_PATH"] + chunk_handle + ".chunk"
 
     #check if file exists
@@ -66,7 +66,6 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     if os.path.getsize(buffer_filename) > remaining_size:
         os.remove(buffer_filename)
         return 2
-
 
     #time to logic
     #if primary: send request to replicas
@@ -90,7 +89,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
             #sending requests to replicas
             #possible improvement: multithread this
             for i in replicas:
-                append_request = requests.post("http://{0}/append-request", json={'chunk_handle': self.chunk_handle})
+                append_request = requests.post("http://{0}/append-request", json={'chunk_handle': chunk_handle, 'data_index': data_index})
                 if append_request.status_code != 200:
                     return_code = 3
                     raise
