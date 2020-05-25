@@ -18,6 +18,12 @@ class FileMap:
         #each filename-> [[chunkhandle, size], [chunkhandle2, size], ...]
         self.chunkhandle_map = {} if not state else ["chunkhandles"]
 
+    def process_path(path):
+        if not type(path) == type('string'):
+            return path
+        else:
+            return path.split("/") 
+
     # Return 
     def checkpoint(self):
         return {
@@ -28,7 +34,7 @@ class FileMap:
     # Retrieve chunk
     def retrieve(self, path, index, container = False):
         if not container: container = self.files
-        path = path if not type(path) == type('string') else process_path(path)
+        path = process_path(path)
         content = container[path[0]]
         if path.length() == 1:
             return content[index] + [self.get_chunkhandles(content[index][0])]
@@ -38,7 +44,7 @@ class FileMap:
     # Add or mutate a chunk
     def update(self, path, index, value, replicas = False, container = False):
         if not container: container = self.files
-        path = path if not type(path) == type('string') else process_path(path)
+        path = process_path(path)
         if path.length() == 1:
             # Update if the chunk exists
             if replicas: self.chunkhandle_map[value[0]] = replicas
@@ -58,7 +64,7 @@ class FileMap:
             return content
 
     def make_path(self, path, top = True, directory = False, container = False):
-        path = path if not type(path) == type('string') else process_path(path)
+        path = process_path(path)
         if not container: container = self.files
         if top and path.length() == 1:
             return False
@@ -75,7 +81,7 @@ class FileMap:
             return content
             
     def verify_path(self, path, container = False):
-        path = path if not type(path) == type('string') else process_path(path)
+        path = process_path(path)
         if not container: container = self.files
         if path.length() == 1:
             return path[0] in container
