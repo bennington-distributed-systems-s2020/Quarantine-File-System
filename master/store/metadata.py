@@ -22,16 +22,7 @@ class MetadataStorage:
     Interface for master state
     """
     instance = None
-    def __init__(self, logfile_path, checkpoint_path):
-        self.logfile_path = logfile_path
-        self.checkpoint_path = checkpoint_path
-        self.store = FileMap()
-        self.chunkhandler = ChunkHandler()
-        instance = self
-
-    def __del__(self):
-        instance = None
-        del self
+    @staticmethod
 
     def retrieve_storage(log = 'logs.json', check = 'checkpoint.json'):
         """
@@ -40,9 +31,20 @@ class MetadataStorage:
         Static singleton function
         source: https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
         """
+        if MetadataStorage.instance == None:
+            MetadataStorage.instance = MetadataStorage('logs.json', 'checkpoint.json')
+        return MetadataStorage.instance
 
-        exist = bool(MetadataStorage.instance)
-        return MetadataStorage(log, check) if not exist else MetadataStorage.instance
+    def __init__(self, logfile_path, checkpoint_path):
+        self.logfile_path = logfile_path
+        self.checkpoint_path = checkpoint_path
+        self.store = FileMap()
+        self.chunkhandler = ChunkHandler()
+        MetadataStorage.instance = self
+
+    def __del__(self):
+        MetadataStorage.instance = None
+        del self
 
     def get_chunk(self, filename, chunk_index = None):
         """
@@ -210,3 +212,13 @@ class MetadataStorage:
 
         with open(self.checkpoint_path, 'w') as json_file:
             json.dump(self.store.checkpoint(), json_file, indent = 2)
+
+if __name__ == "__main__":
+    # tes
+    m = MetadataStorage.retrieve_storage()
+    assert m.logfile_path == "logs.json", "failed to create instance"
+    
+    m.logfile_path = "path changed testing"
+    s = MetadataStorage.retrieve_storage()
+    assert m == s, "failed to make it singleton"
+    assert s.logfile_path == m.logfile_path, "failed to make it singleton"
