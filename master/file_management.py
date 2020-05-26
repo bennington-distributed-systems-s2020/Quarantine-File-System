@@ -12,7 +12,7 @@ functionality: Used for creating a new file for a client.
 here put absolute directory path such as "/school/work/"
 You can only create one directory at an existing directory at a time
 
-2. create_file(file_path, file_size)
+2. create_new_file(file_path, file_size)
 file path eg: "/school/work/fun.txt"
 file size: number of bytes of the file you wanna create and append data to.
 

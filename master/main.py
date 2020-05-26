@@ -7,6 +7,8 @@
 import threading
 from flask import Flask, jsonify
 from file_management import *
+from leases import *
+
 
 app = Flask(__name__)
 
@@ -38,7 +40,7 @@ def fetch(file_path, command, chunk_index):
     json_response["replica"] = chunk_info[2]  # extract replica locations
     return jsonify(json_response)
     
-@app.route('/create/file/<string:new_file_path>/<int:file_size>')
+@app.route('/create/file/<string:new_file_path>/<int:file_size>', methods = ['POST'])
 def create_file(new_file_path, file_size):
     """
     Caller: Client
@@ -57,7 +59,7 @@ def create_file(new_file_path, file_size):
         return jsonify(json_response)
 
 
-@app.route('/create/directory/<string:new_directory_path>')
+@app.route('/create/directory/<string:new_directory_path>', methods = ['POST'])
 def create_directory(new_directory_path):
     """
     Caller: Client
@@ -75,42 +77,50 @@ def create_directory(new_directory_path):
         return jsonify(success)
 
 
-@app.route('/heartbeat/<string: chunk_server>/<bool: chunk_server_state>', methods=['POST'])
+@app.route('/heartbeat/<string:chunk_server>/<string:chunk_server_state>', methods=['POST'])
 def heartbeat(chunk_server,chunk_server_state):
     """
     Caller: Chunkserver
     :param chunk_server_ip: chunk_server_ip/dns
-    :param chunk_server_state: bool, True(chunk server is available), False(unavailable) 
+    :param chunk_server_state: string, True(chunk server is available), False(unavailable) 
     :return: status code 200 means"OK"; code 500 means "error" ; code 400 means invalid inputs
     """
-    if chunk_server == None or chunk_server_state == None:
-        return 400
-    try:
-        global live_chunk_server_set
-        global metadata_handler
-        metadata_handler.toggle(chunk_server, chunk_server_state)
-        if chunk_server_state == False:
-            live_chunk_server_set.remove(chunk_server)
-        elif chunk_server_state == True:
-            live_chunk_server_set.add(chunk_server)
-    except:
-        return 500
-    return 200
+    # if chunk_server == None or chunk_server_state == None:
+    #     return 400
+    # try:
+    #     global live_chunk_server_set
+    #     global metadata_handler
+    #     metadata_handler.toggle(chunk_server, chunk_server_state)
+    #     if chunk_server_state == False:
+    #         live_chunk_server_set.remove(chunk_server)
+    #     elif chunk_server_state == True:
+    #         live_chunk_server_set.add(chunk_server)
+    # except:
+    #     return 500
+    # return 200
+    pass
 
-
-@app.route('/lease-request/<string:chunk_handle>', methods=['GET'])
-def lease_request():
+@app.route('/lease-request/<string:chunk_handle>/<string:chunk_server_addr>', methods=['GET'])
+def lease_request(chunk_handle, chunk_server_addr):
     """
     Caller: Chunkserver
     :param chunk_handle: Chunk handle in hex for a lease  
     :return: Boolean (True) if the operation succeeded 
     """
-    return True
-
+    global lease
+    if lease.grant_lease(chunk_handle, chunk_server_addr) == True:
+        return lease.chunk_lease
+    else:
+        return False
 
 if __name__ == "__main__":
-    thread_update_live_server = threading.Thread(target=update_live_chunk_server) # update available chunkserver, every 30s, runs forever
-    app_run = threading.Thread(target=app.run)
+    # test lease
+    lease.grant_lease("11","127.0.0.1")
+    output = "127.0.0.1"
+    assert lease.chunk_lease["11"]['primary'] == output, "lease grant failed"
 
-    thread_update_live_server.start()
-    app_run.start()
+    # # thread_update_live_server = threading.Thread(target=update_live_chunk_server) # update available chunkserver, every 30s, runs forever
+    # thread_app_run = threading.Thread(target=app.run)
+
+    # # thread_update_live_server.start()
+    # thread_app_run.start()

@@ -3,55 +3,50 @@
     leases.py - Handle lease delegation
     Date: 5/13/2020
 """
-
+from datetime import datetime
 from utility import get_chunkservers
 import requests
 
 class Lease:
-    def __init__(chunk_hex, timestamp, replicas):
-        self.chunk_hex = chunk_hex
-        self.timestamp = timestamp
-        self.replicas  = replicas
-
-def get_all_for_lease(chunk_hex):
-    """
-    Get all chunkservers that are associated to a given chunk.
-    Returns all of them, regardless of if they're primaries or replicas.
-    """
-    chunkservers = get_chunkservers()
-    chunks = []
-    for ip in chunkservers:
-        r = requests.post(ip + "/lease", data={"chunk": chunk_hex})
-        leases.append((ip, r))
-    return chunks
-
-def get_primary_for_lease(chunk_hex):   
-    """
-    Return the primary chunkserver for a given chunk.
-    """
-    chunks = get_all_for_lease(chunk_hex)
-    primary = [
-        elem for elem in filter(
-            lambda response: response[1]["primary"] == True,
-            chunks
-            )
-        ][0]
-    return primary
+    def __init__(self, chunk_servers = None):
+        self.chunk_lease = {}
     
-def lease_request_handler(chunk_hex, timestamp, replicas):
-    """
-    Handler function for the HTTP endpoint for chunkservers to request a lease.
-    """
-    pass
+    def grant_lease(self, chunk_handle, chunk_server_addr):
+        """
+        functionality: grant lease to the given chunk_server_addr
+        inputs: chunk_handle and chunk_server_addr, 
+        return: True if succeeded, False if not.
+        """
+        try:
+            if chunk_handle not in self.chunk_lease:
+                self.chunk_lease[chunk_handle] = {"primary": chunk_server_addr, "timestamp": datetime.now()}
+            else:
+                self.chunk_lease[chunk_handle]["primary"] = chunk_server_addr
+                self.chunk_lease[chunk_handle]["timestamp"] = datetime.now()    
+            return True
+        except:
+            return False
 
-def lease_grant(chunk_hex, timestamp, replicas):
-    """
-    Creates a lease and sends it to a chunkserver, granting it.
-    """
-    lease = Lease(chunk_hex, timestamp, replicas)
 
-def lease_revoke(chunk_hex):
-    """
-    Revokes a lease from the primary chunkserver attached to a lease.
-    """
-    pass
+    def provoke_lease(self, chunk_handle):
+        """
+        functionality: Revokes a lease from the primary chunkserver attached to a lease.
+        parameter: chunk_handle
+        return True when succeeded
+        """
+        try:
+            if chunk_handle in self.chunk_lease:
+                self.chunk_lease[chunk_handle]["primary"] = None
+                self.chunk_lease[chunk_handle]["timestamp"] = None
+            return True
+        except:
+            return False
+        return True
+lease = Lease()
+
+if __name__ == "__main__":
+    lease = Lease()
+    lease.grant_lease("102992a28c", "http://127.0.0.1:8000")
+    print(lease.chunk_lease)
+    lease.provoke_lease("102992a28c")
+    print(lease.chunk_lease)
