@@ -21,7 +21,7 @@ class FileMap:
         #each filename-> [[chunkhandle, size], [chunkhandle2, size], ...]
         self.chunkhandle_map = {} if not state else ["chunkhandles"]
 
-    def process_path(path):
+    def process_path(self, path):
         if not type(path) == type('string'):
             return path
         else:
@@ -41,7 +41,7 @@ class FileMap:
         Retrieve chunk
         """
         if not container: container = self.files
-        path = process_path(path)
+        path = self.process_path(path)
         content = container[path[0]]
         if path.length() == 1:
             if index != None:
@@ -50,7 +50,7 @@ class FileMap:
                 result = []
                 for chunk in content:
                     result += content[index] + \
-                      [self.get_chunkservers(content[chunk][0]]
+                      [self.get_chunkservers(content[chunk][0])]
                 return result
         else:
             return self.retrieve(path[1:], index, content)
@@ -60,7 +60,7 @@ class FileMap:
         Add or mutate a chunk
         """
         if not container: container = self.files
-        path = process_path(path)
+        path = self.process_path(path)
         if path.length() == 1:
             # Update if the chunk exists
             if replicas: self.chunkhandle_map[value[0]] = replicas
@@ -80,7 +80,7 @@ class FileMap:
             return content
 
     def make_path(self, path, top = True, directory = False, container = False):
-        path = process_path(path)
+        path = self.process_path(path)
         if not container: container = self.files
         if top and path.length() == 1:
             return False
@@ -97,16 +97,16 @@ class FileMap:
             return content
             
     def verify_path(self, path, container = False):
-        path = process_path(path)
+        path = self.process_path(path)
         if not container: container = self.files
         if path.length() == 1:
             return path[0] in container
         else:
-            return verify_path(path[1:], content[path[0]])
+            return self.verify_path(path[1:], content[path[0]])
 
     def remove(self, path, index = None, container = False):
         if not container:
-            if self.verify(path):
+            if self.verify_path(path):
                 if path[-1] == "":
                     del path[-1]
                 self.files = self.remove(path[1:],container=self.files[""])
@@ -121,7 +121,7 @@ class FileMap:
                     del container[path[0]][path[1]][index]
                 return container
             else:
-                container = remove(path[1:], index, container[path[0]])
+                container = self.remove(path[1:], index, container[path[0]])
                 return container
                 
                 

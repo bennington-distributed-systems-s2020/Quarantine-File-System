@@ -9,6 +9,8 @@ import json
 from store.filemap import *
 from store.metadata_errors import *
 from store.chunkhandler import *
+from store.metadata_errors import*
+
 
 class MetadataStorage:
     """
@@ -46,7 +48,7 @@ class MetadataStorage:
         except KeyError:
             raise FileNameKeyError(filename)
         except IndexError:
-            raise ChunkIndexError(filename, index)
+            raise ChunkIndexError(filename, chunk_index)
             
     
     def mutate_chunk(self, filename, chunk_index, size):
