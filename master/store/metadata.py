@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
- store.py - Metadata Store object that holds the information
-            mapping files to chunks and manages the metadata.
+ metadata.py - Metadata Store object that holds the information
+               mapping files to chunks and manages the metadata.
 """
 
 import os.path
@@ -195,7 +195,8 @@ class MetadataStorage:
 
     def create_checkpoint(self):
         """
-        Creates a checkpoint in master.json when logs.json gets bigger than a 
+        Creates a checkpoint in master.json when logs.json gets 
+        bigger than a 
         specific limit we need to set. This function is triggered 
         by write_to_log() above
         """

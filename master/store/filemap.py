@@ -45,12 +45,12 @@ class FileMap:
         content = container[path[0]]
         if path.length() == 1:
             if index != None:
-                return content[index] + [self.get_chunkhandles(content[index][0])]
+                return content[index] + [self.get_chunkservers(content[index][0])]
             else:
                 result = []
                 for chunk in content:
                     result += content[index] + \
-                      [self.get_chunkhandles(content[chunk][0]]
+                      [self.get_chunkservers(content[chunk][0]]
                 return result
         else:
             return self.retrieve(path[1:], index, content)
