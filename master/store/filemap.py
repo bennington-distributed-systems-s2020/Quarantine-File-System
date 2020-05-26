@@ -13,6 +13,9 @@ without complicating or breaking the interface with other components
 
 
 class FileMap:
+    """
+    Map of all of the metadata
+    """
     def __init__(self, state = {}):
         self.files = {} if not state else state["files"]
         #each filename-> [[chunkhandle, size], [chunkhandle2, size], ...]
@@ -24,25 +27,38 @@ class FileMap:
         else:
             return path.split("/") 
 
-    # Return 
     def checkpoint(self):
+        """
+        Return state of the system as a dictionary.
+        """
         return {
                 "files":self.files, 
                 "chunkhandles":self.chunkhandle_map
                }
 
-    # Retrieve chunk
     def retrieve(self, path, index, container = False):
+        """
+        Retrieve chunk
+        """
         if not container: container = self.files
         path = process_path(path)
         content = container[path[0]]
         if path.length() == 1:
-            return content[index] + [self.get_chunkhandles(content[index][0])]
+            if index != None:
+                return content[index] + [self.get_chunkhandles(content[index][0])]
+            else:
+                result = []
+                for chunk in content:
+                    result += content[index] + \
+                      [self.get_chunkhandles(content[chunk][0]]
+                return result
         else:
             return self.retrieve(path[1:], index, content)
 
-    # Add or mutate a chunk
     def update(self, path, index, value, replicas = False, container = False):
+        """
+        Add or mutate a chunk
+        """
         if not container: container = self.files
         path = process_path(path)
         if path.length() == 1:
@@ -126,11 +142,13 @@ class FileMap:
         return self.chunkhandle_map[chunkhandle]
 
     def list_chunkservers(self):
-        # o(mn) where m is chunkservers and n is chunkhandles 
-        #*cries again*
-        #tbh, this is really o(n) since m is generally pretty small
-        #chunkhandles will usually have 3 or 4 chunkhandles so it's not
-        #really `m`
+        """
+        o(mn) where m is chunkservers and n is chunkhandles 
+        *cries again*
+        tbh, this is really o(n) since m is generally pretty small
+        chunkhandles will usually have 3 or 4 chunkhandles so it's not
+        really `m`
+        """
         chunkservers=[]
         for chunkhandle in self.chunkhandle_map:
             for chunkserver in self.chunkhandle_map[chunkhandle]:
