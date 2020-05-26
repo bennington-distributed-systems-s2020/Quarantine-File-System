@@ -6,11 +6,16 @@
 
 import os.path
 import json
-from store.filemap import *
-from store.metadata_errors import *
-from store.chunkhandler import *
-from store.metadata_errors import*
-
+try:
+    from store.filemap import *
+    from store.metadata_errors import *
+    from store.chunkhandler import *
+    from store.metadata_errors import *
+except:
+    from filemap import *
+    from metadata_errors import *
+    from chunkhandler import *
+    from metadata_errors import *
 
 class MetadataStorage:
     """
@@ -22,7 +27,7 @@ class MetadataStorage:
         self.checkpoint_path = checkpoint_path
         self.store = FileMap()
         self.chunkhandler = ChunkHandler()
-        isInstance = self
+        instance = self
 
     def __del__(self):
         instance = None
@@ -60,7 +65,7 @@ class MetadataStorage:
         except KeyError:
             raise FileNameKeyError(filename)
         except IndexError:
-            raise ChunkIndexError(filename, index)
+            raise ChunkIndexError(filename, chunk_index)
 
         # logging
         self.write_to_log("mutate_chunk", [filename, chunk_index, size])
@@ -70,7 +75,7 @@ class MetadataStorage:
         Append a new chunk to file
         """
         try:
-            self.store.update(filename, chunk_index, 
+            self.store.update(filename, chunk_index,  ################ TODO: where is the chunk_index?
                              [chunkhandle, 0], chunkservers)
         except KeyError:
             raise FileNameKeyError(filename)
@@ -108,7 +113,7 @@ class MetadataStorage:
         except KeyError:
             raise FileNameKeyError(filename)
         except IndexError:
-            raise ChunkIndexError(filename, index)
+            raise ChunkIndexError(filename, chunk_index)
         
         # logging
         self.write_to_log("remove", [filename, chunk_index])
@@ -133,7 +138,7 @@ class MetadataStorage:
         return self.store.list_chunkservers()
 
     def get_chunk_handle(self):
-        return self.chunkhandler.get_chunkservers()
+        return self.chunkhandler.get_chunkservers() ######## TODO: problem line
 
     def recover(self):
         """
@@ -191,7 +196,7 @@ class MetadataStorage:
         if len(logs["logs"]) + 1 > 5000: # need to decide on the max size of logs
             self.create_checkpoint()
             # don't forget to reset the logs file
-            with open(self.log_path, 'w') as json_file:
+            with open(self.logfile_path, 'w') as json_file:
                 json.dump({ "logs": [] }, json_file, indent = 2)
 
 

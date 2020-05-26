@@ -14,4 +14,4 @@ class FilenameKeyError(Exception):
 
 
 if __name__ == "__main__":
-    print(FilenameKeyError("/fuck/you/"))
+    print(FilenameKeyError("/hi/you/"))
