@@ -50,8 +50,8 @@ number_of_replicas_json = "numberOfReplicasConfig.json"
 with open(number_of_replicas_json) as f:
     number_of_replicas = json.load(f)["numberOfReplicas"]
 
-# get metadata_handler
-metadata_handler = metadata.MetadataStorage.retrieveStorage()
+# get metadata_handler##########################TODO: fix this
+metadata_handler = metadata.MetadataStorage.retrieve_storage()
 
 live_chunk_server_set = set()
 ####################################
@@ -98,6 +98,7 @@ def get_file_parent_directory_path(file_path):
 def create_new_file(file_path, file_size):
     global metadata_handler
     global number_of_replicas
+    global live_chunk_server_set
     # verify filesize
     if (file_size is None) or (type(file_size) != int) or (file_size < 0) :
         return False
@@ -108,15 +109,18 @@ def create_new_file(file_path, file_size):
     # create new file with number of chunks needed in the metadata
     for _ in range(number_of_chunks_needed): 
         # get random live server list according to number of replicas set in config
-        live_servers_list = metadata_handler.locate()
-        random_server_list = get_servers_list_that_stores_new_file(live_servers_list, number_of_replicas)
+        random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
         
         # get chunk handle
         chunk_handle = metadata_handler.get_chunk_handle()
         # assign new chunks to different servers all the time. distribute chunks well
-        metadata_handler.create_chunk(file_path, chunk_handle, random_server_list) #takes a list of chunkserver
-    
-    return ######################## return the new metadata of the file
+        metadata_handler.create_chunk(file_path, chunk_handle, random_chunk_server_list) #takes a list of chunkserver
+        
+    try:
+        output = metadata_handler.get_chunk(chunk_handle)
+        return output
+    except:
+        return {"error": "failed to grab chunk"}
 
 def create_new_directory(directory_path):
     global metadata_handler
@@ -135,14 +139,14 @@ def create_new_directory(directory_path):
 def create_new_chunk(file_path):
     global metadata_handler
     global number_of_replicas
+    global live_chunk_server_set
 
     if metadata_handler.verify_path(file_path) == False:
         return False
     
     # get random chunkservers list to store the chunk
-    live_chunkservers_list = metadata_handler.locate()########## need to change
     new_chunk_hundle = metadata_handler.get_chunk_handle() 
-    random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunkservers_list, number_of_replicas)
+    random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
 
     # create new chunk for chunkservers on the random list
     metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
@@ -183,14 +187,19 @@ def get_number_of_chunk_needed(file_size):
         return number_of_chunks_needed
 
 
-def get_servers_list_that_stores_new_file(live_servers_list, number_of_replicas):
-    live_servers_num = len(live_servers_list)
+def get_servers_list_that_stores_new_file(live_servers_tuple_set, number_of_replicas):
+    live_servers_num = len(live_servers_tuple_set)
+    live_chunk_server_list= []
     random_server_list = []
     if live_servers_num <= 0:
         return False
+    
+    for chunk_server, timestamp in live_servers_tuple_set:
+        live_chunk_server_list.append(chunk_server)
+        
     for _ in range(number_of_replicas):
         randomNum = randint(0,live_servers_num-1)
-        random_server_list.append(live_servers_list[randomNum])
+        random_server_list.append(live_chunk_server_list[randomNum])
     return random_server_list
 
 
@@ -212,8 +221,10 @@ def get_file_chunk_handles(file_path, chunk_index_list):
 
 
 if __name__ == "__main__":
-    live_server = metadata_handler.locate()
-    print(live_server)
+    # test get random live server function
+    live_server = {(3, 3), (1, 1), (2, 2)}
+    o = get_servers_list_that_stores_new_file(live_server, 1)
+    print(o)
 
     # test get chunk size needed
     assert get_number_of_chunk_needed(-1) == False, "failed test"

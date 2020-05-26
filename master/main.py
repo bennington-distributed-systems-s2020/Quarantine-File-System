@@ -125,6 +125,7 @@ def heartbeat(chunk_server,chunk_server_state):
         return 500
     return 200
 
+##TODO: update chunksize in metadata here when i receive the grant request. 
 @app.route('/lease-request/<string:chunk_handle>/<string:chunk_server_addr>', methods=['GET'])
 def lease_request(chunk_handle, chunk_server_addr):
     """
