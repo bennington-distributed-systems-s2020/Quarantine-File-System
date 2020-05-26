@@ -37,10 +37,11 @@ file_path eg: "/school/work/cs/tree.py"
 chunk_index_list eg: [0] or [0,1,2,3] or [3,5,7,8,9,22]
 """
 
-import os
 import json
 from random import randint
 from store import metadata
+from time import sleep
+from datetime import datetime
 
 #############----Config---#################
 number_of_replicas_json = "numberOfReplicasConfig.json"
@@ -57,17 +58,21 @@ live_chunk_server_set = set()
 
 
 def update_live_chunk_server():
-    global metadata_handler
     global live_chunk_server_set
     while True:
         # after 30s if chunkserver did not heartbeat master, we will remove
         # the chunkserver from available chunkserver list.
-        live_chunk_server_list = metadata_handler.locate()
+        # live_chunk_server_set stored a list of tupple like: (chunkserver, datetime_heard_heartbeat)
         sleep(30)
-        if live_chunk_server_set.issuperset(live_chunk_server_list) == False:
-            for chunk_server in live_chunk_server_list:
-                if chunk_server not in live_chunk_server_set:
-                    metadata_handler.toggle(chunk_server, False)
+        now = datetime.now()
+        to_remove_list = []
+        for chunk_server, datetime_heard_heartbeat in live_chunk_server_set:
+            if (datetime_heard_heartbeat - now).second > 30:
+                to_remove_list.append((chunk_server, datetime_heard_heartbeat))
+        
+        for i in range(len(to_remove_list)):
+            live_chunk_server_set.remove(to_remove_list[i])
+        
 
 def verify_file_parent_directory_path(file_path):
     global metadata_handler
@@ -188,6 +193,7 @@ def get_servers_list_that_stores_new_file(live_servers_list, number_of_replicas)
         random_server_list.append(live_servers_list[randomNum])
     return random_server_list
 
+
 def get_file_chunk_handles(file_path, chunk_index_list):
     global metadata_handler
 
@@ -203,11 +209,6 @@ def get_file_chunk_handles(file_path, chunk_index_list):
         curr_chunk_handle = metadata_handler.get_chunk(file_path, curr_chunk_index)
         chunk_handles.append(curr_chunk_handle)
     return chunk_handles
-
-def get_file_chunk_handle_start_at_index(file_path, start_chunk_index):
-    global metadata_handler
-    # return metadata_handler.get_file(file_path)[start_chunk_index]
-    # write this function in metadata
 
 
 if __name__ == "__main__":

@@ -17,6 +17,9 @@ def example():
     return "QFS master!"
 
 
+# need to do some change---should use metadata_handler.get_chunk(file_path), without index,
+# you get all chunk info for the file. slice it up from there. return json
+
 # need to reform this function so that chunkserver can call and create new chunks or files
 @app.route('/fetch/<string:file_path>/<int:chunk_index>', methods=['GET'])
 def fetch(file_path, command, chunk_index):
@@ -40,6 +43,7 @@ def fetch(file_path, command, chunk_index):
     json_response["replica"] = chunk_info[2]  # extract replica locations
     return jsonify(json_response)
     
+
 @app.route('/create/file/<string:new_file_path>/<int:file_size>', methods = ['POST'])
 def create_file(new_file_path, file_size):
     """
@@ -85,20 +89,24 @@ def heartbeat(chunk_server,chunk_server_state):
     :param chunk_server_state: string, True(chunk server is available), False(unavailable) 
     :return: status code 200 means"OK"; code 500 means "error" ; code 400 means invalid inputs
     """
-    # if chunk_server == None or chunk_server_state == None:
-    #     return 400
-    # try:
-    #     global live_chunk_server_set
-    #     global metadata_handler
-    #     metadata_handler.toggle(chunk_server, chunk_server_state)
-    #     if chunk_server_state == False:
-    #         live_chunk_server_set.remove(chunk_server)
-    #     elif chunk_server_state == True:
-    #         live_chunk_server_set.add(chunk_server)
-    # except:
-    #     return 500
-    # return 200
-    pass
+    if chunk_server == None or chunk_server_state == None:
+        return 400
+    try:
+        global live_chunk_server_set
+        if chunk_server_state == "False":
+            # remove from the set if its been set False
+            to_remove = None
+            for cs, d in live_chunk_server_set:
+                if cs == chunk_server:
+                    to_remove = (cs,d)
+                    break
+            live_chunk_server_set.remove(to_remove)
+
+        elif chunk_server_state == "True":
+            live_chunk_server_set.add((chunk_server, datetime.now()))
+    except:
+        return 500
+    return 200
 
 @app.route('/lease-request/<string:chunk_handle>/<string:chunk_server_addr>', methods=['GET'])
 def lease_request(chunk_handle, chunk_server_addr):
