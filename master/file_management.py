@@ -140,7 +140,7 @@ def create_new_chunk(file_path):
         return False
     
     # get random chunkservers list to store the chunk
-    live_chunkservers_list = metadata_handler.locate()
+    live_chunkservers_list = metadata_handler.locate()########## need to change
     new_chunk_hundle = metadata_handler.get_chunk_handle() 
     random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunkservers_list, number_of_replicas)
 

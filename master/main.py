@@ -21,13 +21,18 @@ def example():
 # you get all chunk info for the file. slice it up from there. return json
 
 # need to reform this function so that chunkserver can call and create new chunks or files
-@app.route('/fetch/<string:file_path>/<int:chunk_index>', methods=['GET'])
-def fetch(file_path, command, chunk_index):
+@app.route('/fetch/<string:file_path>/<string:command>', methods=['GET'])
+@app.route('/fetch/<string:file_path>/<string:command>/<int:chunk_index>', methods=['GET'])
+def fetch(file_path, command, chunk_index=None):
     """
     Caller: Client
-    :param file_name: Name of the file being requested  
-    :param chunk_index: A specific part of the file being requested 
-    :return: chunk handle and chunk locations as JSON
+    :param file_path: path of the file. if you have a file under "/school/cs/" called work work.txt
+                            then you should have "/school/cs/work/" # you can keep suffix of the file if you'd like
+                            it's optional and it does not affect how you use our system.
+    :param chunk_index: A specific part of the file being requested. 
+                It's not needed when chunkserver is adding a new chunk to an existing file. 
+    :return: if succeeds: chunk handle and chunk locations as JSON
+                if fails: return error in json format {"error": "error messagesss"}
     """
     global metadata_handler
     error = {"error": "invalid file path"}
@@ -36,13 +41,25 @@ def fetch(file_path, command, chunk_index):
     if metadata_handler.verify_path(file_path) == False:
         return jsonify(error)
 
-    # since this function takes a list of index, so I used [chunk_index] to make it a list
-    chunk_info = get_file_chunk_handles(file_path, [chunk_index])[0]
+    # for a read
+    if command == "r":
+        # since this function takes a list of index, so I used [chunk_index] to make it a list
+        chunk_info = get_file_chunk_handles(file_path, [chunk_index])[0]
 
-    json_response["chunk_handle"] = chunk_info[0]   # extract chunk handle
-    json_response["replica"] = chunk_info[2]  # extract replica locations
-    return jsonify(json_response)
+        json_response["chunk_handle"] = chunk_info[0]   # extract chunk handle
+        json_response["replica"] = chunk_info[2]  # extract replica locations
+        return jsonify(json_response)
     
+    # for adding a new chunk on an existing file
+    if command == "ac":
+        output = create_new_chunk(file_path)
+        if output == False:
+            return jsonify({"error": "failed to create new chunk"}) # failed to created new chunk for some reason
+        json_response["chunk_handle"] = output[0]
+        json_response["replica"] = output[1]
+        return jsonify(json_response) # return json packaged chunk info
+
+
 
 @app.route('/create/file/<string:new_file_path>/<int:file_size>', methods = ['POST'])
 def create_file(new_file_path, file_size):
