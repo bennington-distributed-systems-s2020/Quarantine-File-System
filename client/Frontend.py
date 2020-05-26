@@ -9,11 +9,18 @@
 # so that other functions can easily pull from it
 #
 
-from flask import Flask
+from flask import Flask, json, jsonify
 from pip._vendor import requests
+
+import client_append
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
+with open("client.json") as client_json:
+    client_config = json.load(client_json)
 
 @app.route("/")
 def example():
@@ -102,9 +109,35 @@ def append(file_name, content):
     file_name = request_json["file_name"]
     content = request_json["content"]
 
-    #1) Call fetch on Master to get the primary and the replicas
-    #2) Break the data to 16mb chunks and send them to the replicas with the corresponding indices
-    #3) Send append request to the primary once client has received acknowledgement from all replicas
+    #Call fetch on Master to get the primary and the replicas
+    fetch_r = requests.get("http://{0}:{1}/fetch".format(chunkserver_config["master"][0],
+                                                         chunkserver_config["master"][1]),
+                                                         json={json.dumps({"filename": file_name, "command": "a"})})
+    #see API doc for return format
+    append_chunk = fetch_r.json()[0] #if fetch was done correctly this should just have 1 chunk in the list
+
+    #call append
+    return_code = client_append.append(append_chunk, content)
+    #if we have to append again on a new chunk
+    if return_code == 301:
+        fetch_new_r = requests.get("http://{0}:{1}/fetch".format(chunkserver_config["master"][0],
+                                                                 chunkserver_config["master"][1]),
+                                                                 json={json.dumps({"filename": file_name, "command": "ac"})})
+        new_append_chunk = fetch_new_r.json()[0]
+        #call the append function again on the new chunk
+        return_code = client_append.append(new_append_chunk, content)
+
+    #on a new chunk we could not get 301
+    if return_code == 500:
+        app.logger.critical("Exception on chunkserver {0}".format(append_chunk["primary"]))
+        abort(500)
+    elif return_code == 400:
+        #what could cause this is unknown. We could attempt to run the func again ehre
+        #though for now ill just log and abort
+        app.logger.warning("Chunkhandle not found or buffer not found on chunkserver {0} or one of its replicas".format(append_chunk["primary"]))
+        abort(400)
+    else:
+        return 0 #success
 
 #this is actually unnecessary so ill comment it out
 #@app.route('/append_request/<string:chunk_handle>')
