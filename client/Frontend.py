@@ -30,15 +30,16 @@ def fetch(file_name, chunk_index):
     :return: File metadata {error handle if nothing received or sanity checks failed}
     """
     metadata = 0  # Will have some kind of call to the master to get the metadata list
+    #Q: Call fetch on master for this
     return metadata
 
-
-@app.route('/read/<string:file_name>,<int:chunk_handle>,<int:start_byte>,<int:byte_range>', method='GET')
-def read(file_name, chunk_handle, start_byte, byte_range):
+#Q: rewrote the spec for read. Note that the client does not have access to the metadata
+#Q: It'd have to call fetch to the Master in order to get the chunkhandle to read from
+@app.route('/read/<string:file_name>,<int:start_byte>,<int:byte_range>', method='GET')
+def read(file_name, start_byte, byte_range):
     """
     Reads out the requested file from the chunkserver
     :param file_name: Name of requested file
-    :param chunk_handle: File ID
     :param start_byte: Where to start reading
     :param byte_range: How much to read
     :return: Text obtained from server
@@ -82,25 +83,34 @@ def write(file_name, content):
     :return: Success confirmation or error message
     """
     # Pass this all to the server, get back a status, and print a message to the user
+    abort(405)
+    return ""
 
-
-@app.route('/append/<string:file_name>,<string:content>,<int:chunk_handle>,<int:length>')
-def append(file_name, content, chunk_handle, length):
+#modifying append and rewrite it to take in a json instead
+#since it might not be a good idea to fit 16mb of content in an url
+@app.route('/append/', strict_slashes=False, methods=['GET', 'POST'])
+def append(file_name, content):
     """
     Adds data to the end of a previously existing file
     :param file_name: Name of file to be appended to
     :param content: What to write to the end of the file
-    :param chunk_handle: File ID
-    :param length: The size in bytes of the data to be appended
     :return: Success confirmation or error message {documentation says boolean though?}
     """
     # Pass this all to the server, get back a status, and print a message to the user
+    #parsing json
+    request_json = request.get_json()
+    file_name = request_json["file_name"]
+    content = request_json["content"]
 
+    #1) Call fetch on Master to get the primary and the replicas
+    #2) Break the data to 16mb chunks and send them to the replicas with the corresponding indices
+    #3) Send append request to the primary once client has received acknowledgement from all replicas
 
-@app.route('/append_request/<string:chunk_handle>')
-def append_request(chunk_handle):
-    """
-    Asks the chunk server for permission to append to a file
-    :param chunk_handle: File ID
-    :return: Success confirmation or error message
-    """
+#this is actually unnecessary so ill comment it out
+#@app.route('/append_request/<string:chunk_handle>')
+#def append_request(chunk_handle):
+#    """
+#    Asks the chunk server for permission to append to a file
+#    :param chunk_handle: File ID
+#    :return: Success confirmation or error message
+#    """
