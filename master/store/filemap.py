@@ -61,8 +61,8 @@ class FileMap:
         if container == None: container = self.files
 
         if len(path) == 1:
+            self.change(chunkhandle, 0, replicas)
             if index in range(0, len(path)):
-                self.change(chunkhandle, size, replicas)
                 container[path[0]][index] = chunkhandle
                 return container
 
@@ -75,10 +75,10 @@ class FileMap:
             return container
 
     def change(self, chunkhandle, size = 0, replicas = None):
-        if chunkhandle in self.chunkhandles_map:
+        if chunkhandle in self.chunkhandle_map:
             self.chunkhandles_map[chunkhandle][0] = size
         else:
-            self.chunkhandles_map[chunkhandle] = [size, replicas]
+            self.chunkhandle_map[chunkhandle] = [size, replicas]
 
     def make_path(self, path, top = True, directory = False, container = False):
         path = self.process_path(path)
