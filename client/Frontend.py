@@ -26,19 +26,34 @@ with open("client.json") as client_json:
 def example():
     return "client flask API"
 
+#fetch is only a master side command
+#@app.route('/fetch/<string:file_name>/<int:chunk_index>')
+#def fetch(file_name, chunk_index):
+#    """
+#    Makes a request to the master for the metadata of a file. This will provide important
+#    information for the rest of the commands in this file.
+#    :param file_name: The name of the file to get metadata for
+#    :param chunk_index: translated from file name and byte offset specified by application
+#    :return: File metadata {error handle if nothing received or sanity checks failed}
+#    """
+#    metadata = 0  # Will have some kind of call to the master to get the metadata list
+#    #Q: Call fetch on master for this
+#    return metadata
 
-@app.route('/fetch/<string:file_name>/<int:chunk_index>')
-def fetch(file_name, chunk_index):
-    """
-    Makes a request to the master for the metadata of a file. This will provide important
-    information for the rest of the commands in this file.
-    :param file_name: The name of the file to get metadata for
-    :param chunk_index: translated from file name and byte offset specified by application
-    :return: File metadata {error handle if nothing received or sanity checks failed}
-    """
-    metadata = 0  # Will have some kind of call to the master to get the metadata list
-    #Q: Call fetch on master for this
-    return metadata
+@app.route('/create/<string:file_name>')
+def create(file_name):
+    #Call fetch on Master to create the file
+    fetch_r = requests.get("http://{0}:{1}/fetch".format(chunkserver_config["master"][0],
+                                                         chunkserver_config["master"][1]),
+                                                         json={json.dumps({"filename": file_name, "command": "c"})})
+    if fetch_r.status_code() == 500:
+        app.logger.critical("Exception on master when creating {0}".format(file_name))
+        abort(500)
+    elif fetch_r.status_code() != 200:
+        app.logger.warning("Unknown error on Master when trying to create {0}".format(file_name))
+        abort(500)
+    else:
+        return 0 #success
 
 #Q: rewrote the spec for read. Note that the client does not have access to the metadata
 #Q: It'd have to call fetch to the Master in order to get the chunkhandle to read from
