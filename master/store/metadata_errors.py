@@ -6,8 +6,12 @@
 
 class ChunkIndexError(Exception):
     def __init__(self, filename, index):
-        super().__init__(f'{file} does not have a chunk at index number: {index}')
+        super().__init__(f'{filename} does not have a chunk at index number: {index}')
 
 class FilenameKeyError(Exception):
     def __init__(self, filename):
-        super().__init__(f'{file} does not exist in the metadata store')
+        super().__init__(f'{filename} does not exist in the metadata store')
+
+
+if __name__ == "__main__":
+    print(FilenameKeyError("/hi/you/"))
