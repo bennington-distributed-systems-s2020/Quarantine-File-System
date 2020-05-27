@@ -123,11 +123,8 @@ class FileMap:
         Remove file or chunkhandles
         """
         path = self.process_path(path)
-        print("path: {0}".format(path))
         content = self.files
 
-        print("final content {0}".format(content))
-        # print(content[path[-2]])
 
         # if removing a directory
         if index == None:
@@ -135,17 +132,13 @@ class FileMap:
                 # traverse to the parent directory and delete the directory
                 for level in path[:-2]:
                     content = content[level]
-                print("current content: {0}".format(content))
                 del content[path[-2]]
             else:
                 for level in path[:-1]:
                     content = content[level]
-                print("current content: {0}".format(content))
                 for chunk in range(0, len(content[path[-1]])):
-                    del content[path[-1]][chunk]
+                    del content[path[-1]][0]
                 del content[path[-1]]
-
-                
 
         # remove a chunk according to chunk index
         else:
