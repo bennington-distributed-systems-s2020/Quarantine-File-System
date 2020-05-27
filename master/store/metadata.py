@@ -68,7 +68,7 @@ class MetadataStorage:
         # logging
         self.write_to_log("mutate_chunk", [filename, chunk_index, size])
 
-    def create_chunk(self, filename, chunkhandle, chunkservers, chunk_index=None):
+    def create_chunk(self, filename, chunkhandle, chunkservers, chunk_index=-1):
         """
         Append a new chunk to file
         """

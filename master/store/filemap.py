@@ -61,17 +61,17 @@ class FileMap:
         if container == None: container = self.files
 
         if len(path) == 1:
-            if index not in range(0, len(path)):
+            if index in range(0, len(path)):
                 self.change(chunkhandle, size, replicas)
                 container[path[0]][index] = chunkhandle
                 return container
 
             else:
                 # Append to chunk list if it doesn't exist
-                container[path[0]] += [value]
+                container[path[0]] += [chunkhandle]
                 return container
         else:
-            container[path[0]] = self.add(path[1:], index, value, replicas, container[path[0]])
+            container[path[0]] = self.add(path[1:], index, chunkhandle, replicas, container[path[0]])
             return container
 
     def change(self, chunkhandle, size = 0, replicas = None):
@@ -130,7 +130,7 @@ class FileMap:
             if content[path[-1]] == []:
                 del content[path[-1]]
             else:
-                for i in range(0,len(content[path[-1]]))
+                for i in range(0,len(content[path[-1]])):
                     self.remove(path, i)
                 del content[path[-1]]
         else:
