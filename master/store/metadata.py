@@ -113,7 +113,7 @@ class MetadataStorage:
         try:
             self.store.remove(filename, chunk_index)
         except KeyError:
-            raise FileNameKeyError(filename)
+            return FileNameKeyError(filename)
         except IndexError:
             raise ChunkIndexError(filename, chunk_index)
         
@@ -140,7 +140,7 @@ class MetadataStorage:
         return self.store.list_chunkservers()
 
     def get_chunk_handle(self):
-        return self.chunkhandler.get_chunkservers() ######## TODO: problem line
+        return self.chunkhandler.get_chunk_handle()
 
     def recover(self):
         """

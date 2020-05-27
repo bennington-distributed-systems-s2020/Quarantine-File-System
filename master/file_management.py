@@ -194,7 +194,7 @@ def get_servers_list_that_stores_new_file(live_servers_tuple_set, number_of_repl
     if live_servers_num <= 0:
         return False
     
-    for chunk_server, timestamp in live_servers_tuple_set:
+    for chunk_server, _ in live_servers_tuple_set:
         live_chunk_server_list.append(chunk_server)
         
     for _ in range(number_of_replicas):

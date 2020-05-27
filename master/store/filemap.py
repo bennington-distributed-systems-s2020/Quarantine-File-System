@@ -43,7 +43,7 @@ class FileMap:
         if not container: container = self.files
         path = self.process_path(path)
         content = container[path[0]]
-        if path.length() == 1:
+        if len(path) == 1:
             if index != None:
                 return content[index] + [self.get_chunkservers(content[index][0])]
             else:
@@ -60,13 +60,14 @@ class FileMap:
         Add or mutate a chunk
         """
         if not container: container = self.files
+        content = container
         path = self.process_path(path)
-        if path.length() == 1:
+        if len(path) == 1:
             # Update if the chunk exists
             if replicas: self.chunkhandle_map[value[0]] = replicas
-            if content.length() - 1 <= index:
-                if value.length() == 1:
-                    content[index][1] = value
+            if len(content) - 1 <= index:
+                if len(value) == 1:
+                    content[index][1] = value    # chunk size
                 else:
                     content[index] = value
                 return content
@@ -82,11 +83,11 @@ class FileMap:
     def make_path(self, path, top = True, directory = False, container = False):
         path = self.process_path(path)
         if not container: container = self.files
-        if top and path.length() == 1:
+        if top and len(path) == 1:
             return False
         elif top:
             return self.make_path(path[1:], False, path[-1]=="", container[path[0]])
-        elif path.length() == 1:
+        elif len(path) == 1:
             if path[0] in container:
                 return False
             else:
@@ -98,8 +99,9 @@ class FileMap:
             
     def verify_path(self, path, container = False):
         path = self.process_path(path)
+        content = container
         if not container: container = self.files
-        if path.length() == 1:
+        if len(path) == 1:
             return path[0] in container
         else:
             return self.verify_path(path[1:], content[path[0]])
@@ -114,7 +116,7 @@ class FileMap:
             else:
                 return False
         else:
-            if path.length() <= 2:
+            if len(path) <= 2:
                 if index != None:
                     del container[path[0]][path[1]]
                 else:
