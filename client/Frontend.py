@@ -59,16 +59,14 @@ def create_file(file_path):
 def create_dir(dir_path):
     fetch_r = requests.post("http://{0}:{1}/create/directory/{2}"
                              .format(client_config["master"][0], client_config["master"][1], dir_path))
-
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
-        app.logger.critical("Exception on master when creating {0}".format(file_path))
+        app.logger.critical("Exception on master when creating {0}".format(dir_path))
         abort(500)
     elif fetch_r.status_code != 200:
-        app.logger.warning("Unknown error on Master when trying to create {0}".format(file_path))
+        app.logger.warning("Unknown error on Master when trying to create {0}".format(dir_path))
         abort(500)
     else:
         return 0  # success
-
 
 # Q: rewrote the spec for read. Note that the client does not have access to the metadata
 # Q: It'd have to call fetch to the Master in order to get the chunkhandle to read from
