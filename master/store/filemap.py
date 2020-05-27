@@ -46,7 +46,8 @@ class FileMap:
             content = content[level]
 
         if index != None:
-            return content[level][index] + [self.get_chunk_data(content[index])]
+            chunk_info = [content[index]] + self.get_chunk_data(content[index])
+            return chunk_info
         else:
             return [self.retrieve(path, chunk_index) for chunk_index in range(0, len(content[level]))]
 
@@ -167,3 +168,12 @@ class FileMap:
         return chunkservers
 
 
+if __name__ == "__main__":
+    # testing
+    f = FileMap()
+    f.make_path("/fun.txt")
+    f.add("/fun.txt", -1,"fuckyou",["a"])
+    a = f.retrieve("/fun.txt", 0)
+    print(a)
+
+    

@@ -251,32 +251,22 @@ if __name__ == "__main__":
     # test the method of getting directory's parent directory path
     assert get_file_parent_directory_path("/school/cs.txt") == "/school/", "failed to get directory's parent directory path"
     
-    # #test creating a file
-    # assert create_new_file("/school/cs/fun.txt", 10000000) != False, "failed to create file"
-    # assert create_new_file("/school/cs/hello.txt", 50) != False, "failed to create file"
-    # assert metadata_handler.verify_path("/school/cs/fun.txt") == True, "failed to create a file"
-    # assert metadata_handler.verify_path("/school/cs/hello.txt") == True, "failed to create a file"
+    #test creating a file
+    assert create_new_file("/school/cs/fun.txt", 10000000) != False, "failed to create file"
+    assert create_new_file("/school/cs/hello.txt", 50) != False, "failed to create file"
+    assert metadata_handler.verify_path("/school/cs/fun.txt") == True, "failed to create a file"
+    assert metadata_handler.verify_path("/school/cs/hello.txt") == True, "failed to create a file"
 
-
-    # test create a new chunk for an existing file
-    metadata_handler.create_path("/school/fun.txt")
-    random_live_servers = get_servers_list_that_stores_new_file(live_chunk_server_set,3)
-    assert metadata_handler.create_chunk("/school/fun.txt","2299aac92", random_live_servers) != False, "failed to create new chunk for existing file"
-    print(metadata_handler.store.chunkhandle_map)
-
-    # metadata_handler.create_chunk("/school/fun.txt", 0)
     # print(metadata_handler.store.files)
-    # a = metadata_handler.get_chunk("/school/cs/hello.txt", 0)
-    # print(a)
+    # test mutate chunk size
+    print(metadata_handler.store.files)
+    chunk_handle = metadata_handler.get_chunk("/school/cs/hello.txt", 0)
+    print(chunk_handle)
 
+    # metadata_handler.mutate_chunk(, 1000)
+    # assert metadata_handler.get_chunk("/school/cs/hello.txt", 0)[1][0] == 1000, "failed to mutate chunk size"
 
     """
-
-    # test mutate chunk size
-    metadata_handler.mutate_chunk(, 1000)
-    assert metadata_handler.get_chunk("/school/cs/hello.txt", 0)[1][0] == 1000, "failed to mutate chunk size"
-
-
     # test get file chunk according to handles
     fun_chunk_handle = get_file_chunk_handles("/school/cs/fun.txt", [0])
     hello_chunk_handle = get_file_chunk_handles("/school/cs/hello.txt", [0]) # get first index 0 chunk handle for the hello.txt
