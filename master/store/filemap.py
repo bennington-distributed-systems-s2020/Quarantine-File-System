@@ -111,12 +111,30 @@ class FileMap:
     def verify_path(self, path, container = False):
         path = self.process_path(path)
         if not container: container = self.files
-        if len(path) == 2 and path[-1] == "":
-            return path[0] in container
-        elif len(path) == 1:
-            return path[0] in container
+        
+        # travese til the end, if anything does not exist, return false. 
+        # if it's a directory, traverse there return true
+        if path[-1] == "":
+            try:
+                content = container
+                for level in path[:-1]:
+                    content = content[level]
+                    print(content)
+                return True
+            except:
+                return False
+        # if it's a file, traverse there return false,
         else:
-            return self.verify_path(path[1:], container[path[0]])
+            try: 
+                content = container
+                for level in path:
+                    content = content[level]
+                return True
+            except:
+                return False
+        # return false otherwise
+        return False
+
 
     def remove(self, path, index = None):
         """
@@ -191,11 +209,24 @@ if __name__ == "__main__":
     f.make_path("/fun.txt")
     f.add("/fun.txt", -1,"fuckyou",["a"])
     a = f.retrieve("/fun.txt", 0)
+    print(f.files)
+    print(f.chunkhandle_map)
+    print("\n")
+
+    # print(f.verify_path("/fun.txt"))
+    
 
     f.make_path("/school/")
+    print(f.files)
+    print(f.chunkhandle_map)
+    print("\n")
     # def add(self, path, index, chunkhandle, replicas = None, container = None):
     f.make_path("/school/hello.txt")
 
+    print(f.verify_path("/school/"))
+
+
+    """
     f.add("/school/hello.txt", 0, "chunkhanle", ["server","server2"])
 
     print(f.files)
@@ -229,3 +260,4 @@ if __name__ == "__main__":
     print(f.files)
     print(f.chunkhandle_map)
     print("\n")
+    """
