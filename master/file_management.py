@@ -95,7 +95,6 @@ def get_file_parent_directory_path(file_path):
     return parent_directory_path
 
 
-############## buggy
 def create_new_file(file_path, file_size):
     global metadata_handler
     global number_of_replicas
@@ -108,10 +107,10 @@ def create_new_file(file_path, file_size):
     number_of_chunks_needed = get_number_of_chunk_needed(file_size)
     try:
         # create new file with number of chunks needed in the metadata
+        metadata_handler.create_path(file_path)
         for _ in range(number_of_chunks_needed): 
             # get random live server list according to number of replicas set in config
             random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
-            
             # get chunk handle
             chunk_handle = metadata_handler.get_chunk_handle()
             # assign new chunks to different servers all the time. distribute chunks well
@@ -249,11 +248,11 @@ if __name__ == "__main__":
     # test the method of getting directory's parent directory path
     assert get_file_parent_directory_path("/school/cs.txt") == "/school/", "failed to get directory's parent directory path"
     
-    # test creating a file
-    assert create_new_file("school/cs/fun.txt", 10000000) =! False, "failed to create file"
+    #test creating a file
+    assert create_new_file("school/cs/fun.txt", 10000000) != False, "failed to create file"
     assert create_new_file("school/cs/hello.txt", 50) != False, "failed to create file"
-    assert metadata_handler.verify_path("school/cs/fun.txt") == True, "failed to remove a file"
-    assert metadata_handler.verify_path("school/cs/hello.txt") == True, "failed to remove a file"
+    # assert metadata_handler.verify_path("school/cs/fun.txt") == True, "failed to create a file"
+    # assert metadata_handler.verify_path("school/cs/hello.txt") == True, "failed to create a file"
 
     """
     # test mutate chunk size
