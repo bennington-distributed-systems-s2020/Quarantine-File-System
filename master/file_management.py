@@ -249,10 +249,10 @@ if __name__ == "__main__":
     assert get_file_parent_directory_path("/school/cs.txt") == "/school/", "failed to get directory's parent directory path"
     
     #test creating a file
-    assert create_new_file("school/cs/fun.txt", 10000000) != False, "failed to create file"
-    assert create_new_file("school/cs/hello.txt", 50) != False, "failed to create file"
-    # assert metadata_handler.verify_path("school/cs/fun.txt") == True, "failed to create a file"
-    # assert metadata_handler.verify_path("school/cs/hello.txt") == True, "failed to create a file"
+    assert create_new_file("/school/cs/fun.txt", 10000000) != False, "failed to create file"
+    assert create_new_file("/school/cs/hello.txt", 50) != False, "failed to create file"
+    assert metadata_handler.verify_path("/school/cs/fun.txt") == True, "failed to create a file"
+    assert metadata_handler.verify_path("/school/cs/hello.txt") == True, "failed to create a file"
 
     """
     # test mutate chunk size

@@ -81,7 +81,6 @@ class FileMap:
 
     def make_path(self, path, top = True, directory = False, container = False):
         path = self.process_path(path)
-        if not container: container = self.files
         if top and len(path) == 1:
             return False
         elif top:
@@ -94,7 +93,8 @@ class FileMap:
             else:
                 if not self.verify_path(path[:-1]):
                     return False
-            return self.make_path(path[1:], False, directory, container[path[0]])
+            self.files[path[0]] = self.make_path(path[1:], False, directory, self.files[path[0]])
+            return True
         elif len(path) == 1:
             if path[0] in container:
                 return False
@@ -102,8 +102,9 @@ class FileMap:
                 container[path[0]] = {} if directory else []
                 return container
         else:
-            content =  self.make_path(path[1:], False, path[-1]=="", container[path[0]])
-            return content
+            content = self.make_path(path[1:], False, directory, container[path[0]])
+            container[path[0]] = content
+            return container
             
     def verify_path(self, path, container = False):
         path = self.process_path(path)
