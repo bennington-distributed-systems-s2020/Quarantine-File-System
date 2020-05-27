@@ -131,20 +131,22 @@ class FileMap:
 
         # if removing a directory
         if index == None:
-            # if it's a director under the root
-            if len(path) == 1:
-                for level in path[:-2]:
-                    content = content[level]
-                del content[path[-2]]
-            # if not, travese to the parent directory of the directory that will be removed
-            # then remove it
-            else:
+                # traverse to the parent directory and delete the directory
                 for level in path[:-2]:
                     content = content[level]
                 print("current content: {0}".format(content))
                 del content[path[-2]]
+
+        # remove a chunk according to chunk index
         else:
-            del content[path[-1]][i]
+            # traverse to the file and delete the chunk
+            for level in path[:-1]:
+                content = content[level]
+            # get chunk handle of the file, delete it in chunkhandle_map
+            chunk_handle = self.retrieve(path, index)[0]
+            del content[path[-1]]
+            del self.chunkhandle_map[chunk_handle]
+            
             
             
             
@@ -198,6 +200,7 @@ if __name__ == "__main__":
     print("\n")
 
     f.make_path("/school/music/")
+    f.make_path("/school/music/hip-hop/")
     f.make_path("/school/music/trap/")
     print("after make path")
     print(f.files)
@@ -205,9 +208,21 @@ if __name__ == "__main__":
     print("\n")
 
 
+    f.remove("/school/music/trap/")
+    print("after removing /trap/")
+    print(f.files)
+    print(f.chunkhandle_map)
+    print("\n")
+
     f.remove("/school/music/")
     print("after removing /music/")
     print(f.files)
     print(f.chunkhandle_map)
     print("\n")
 
+
+    f.remove("/fun.txt", 0)
+    print("after removing the chunk in fun")
+    print(f.files)
+    print(f.chunkhandle_map)
+    print("\n")
