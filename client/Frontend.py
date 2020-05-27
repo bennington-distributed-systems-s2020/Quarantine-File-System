@@ -47,10 +47,10 @@ def create_file(file_path):
                              .format(client_config["master"][0], client_config["master"][1], file_path, 0))
 
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
-        app.logger.critical("Exception on master when creating {0}".format(file_name))
+        app.logger.critical("Exception on master when creating {0}".format(file_path))
         abort(500)
     elif fetch_r.status_code != 200:
-        app.logger.warning("Unknown error on Master when trying to create {0}".format(file_name))
+        app.logger.warning("Unknown error on Master when trying to create {0}".format(file_path))
         abort(500)
     else:
         return 0  # success
@@ -61,10 +61,10 @@ def create_dir(dir_path):
                              .format(client_config["master"][0], client_config["master"][1], dir_path))
 
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
-        app.logger.critical("Exception on master when creating {0}".format(file_name))
+        app.logger.critical("Exception on master when creating {0}".format(file_path))
         abort(500)
     elif fetch_r.status_code != 200:
-        app.logger.warning("Unknown error on Master when trying to create {0}".format(file_name))
+        app.logger.warning("Unknown error on Master when trying to create {0}".format(file_path))
         abort(500)
     else:
         return 0  # success
