@@ -94,7 +94,18 @@ def read(file_path, start_byte, byte_range):
         app.logger.warning("Unknown error on Master when trying to read {0}".format(file_path))
         abort(500)
     else:
-        return fetch_r  # success
+        #read on chunkserver
+        chunks_list = fetch_r.json()
+        output = ""
+        for chunk in chunks_list:
+            primary = chunk["primary"]
+            chunk_handle = chunk["chunk_handle"]
+            #this will break on large files since there's no startbyte calculation
+            read_r = requests.get("http://{0}/read".format(primary),
+                    json={"chunk_handle": chunk_handle, "start_byte": start_byte, "byte_range": byte_range})
+            output += read_r.json()
+
+        return output
 
 
 @app.route('/write/<string:file_name>,<string:content>')
