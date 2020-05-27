@@ -74,7 +74,7 @@ class MetadataStorage:
         """
         try:
             self.store.update(filename, chunk_index, [chunkhandle, 0], chunkservers)
-            return get_chunk(filename)[-1]
+            return self.get_chunk(filename)[-1]
         except:
             return {"error": "failed to retrieve chunk, please verify if file_path and chunk_index are valid"}
        

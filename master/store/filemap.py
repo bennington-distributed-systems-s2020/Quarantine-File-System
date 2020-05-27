@@ -55,25 +55,30 @@ class FileMap:
         else:
             return self.retrieve(path[1:], index, content)
 
-    def update(self, path, index, value, replicas = False, container = False):
+    def update(self, path, index, value, replicas = False, container = None):
         """
         Add or mutate a chunk
         """
-        if not container: container = self.files
         path = self.process_path(path)
+        if container == None: 
+            container = self.files
+            self.files[path[0]] = self.update(path[1:], index, value, replicas, self.files[path[0]])
+            return
+
         if len(path) == 1:
             # Update if the chunk exists
             if replicas: self.chunkhandle_map[value[0]] = replicas
-            if len(container) - 1 <= index and index != None:
+
+            if index != None:
                 if len(value) == 1:
-                    container[index][1] = value    # chunk size
+                    container[path[0]][index][1] = value    # chunk size
                 else:
-                    container[index] = value
+                    container[path[0]][index] = value
                 return container
+
             else:
                 # Append to chunk list if it doesn't exist
-                container[index] += [value]
-                if replicas: self.chunkhandle_map[value[0]] = replicas
+                container[path[0]] += [value]
                 return container
         else:
             container[path[0]] = self.update(path[1:], index, value, replicas, container[path[0]])
