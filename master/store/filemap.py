@@ -17,7 +17,7 @@ class FileMap:
     Map of all of the metadata
     """
     def __init__(self, state = {}):
-        self.files = {} if not state else state["files"]
+        self.files = {"":{}} if not state else state["files"]
         #each filename-> [[chunkhandle, size], [chunkhandle2, size], ...]
         self.chunkhandle_map = {} if not state else ["chunkhandles"]
 
@@ -85,12 +85,21 @@ class FileMap:
         if top and len(path) == 1:
             return False
         elif top:
-            return self.make_path(path[1:], False, path[-1]=="", container[path[0]])
+            directory = path[-1]==""
+
+            if directory:
+                if not self.verify_path(path[:-2]):
+                    return False
+                path = path[:-1]
+            else:
+                if not self.verify_path(path[:-1]):
+                    return False
+            return self.make_path(path[1:], False, directory, container[path[0]])
         elif len(path) == 1:
             if path[0] in container:
                 return False
             else:
-                container[path] = {} if directory else []
+                container[path[0]] = {} if directory else []
                 return container
         else:
             content =  self.make_path(path[1:], False, path[-1]=="", container[path[0]])
@@ -99,7 +108,9 @@ class FileMap:
     def verify_path(self, path, container = False):
         path = self.process_path(path)
         if not container: container = self.files
-        if len(path) == 1:
+        if len(path) == 2 and path[-1] == "":
+            return path[0] in container
+        elif len(path) == 1:
             return path[0] in container
         else:
             return self.verify_path(path[1:], container[path[0]])

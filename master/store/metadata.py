@@ -87,7 +87,7 @@ class MetadataStorage:
         If string ends with `/`, a directory is created
         """
 
-        if not self.store.make_path:
+        if not self.store.make_path(filename):
             return "Path already exists"
         
         # logging
