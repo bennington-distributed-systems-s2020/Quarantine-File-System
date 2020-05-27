@@ -36,24 +36,22 @@ class FileMap:
                 "chunkhandles":self.chunkhandle_map
                }
 
-    def retrieve(self, path, index, container = False):
+    def retrieve(self, path, index):
         """
         Retrieve chunk
         """
-        if not container: container = self.files
         path = self.process_path(path)
-        content = container[path[0]]
-        if len(path) == 1:
-            if index != None:
-                return content[index] + [self.get_chunkservers(content[index][0])]
-            else:
-                result = []
-                for chunk in content:
-                    result += content[index] + \
-                      [self.get_chunkservers(content[chunk][0])]
-                return result
+        content = self.files
+        for level in path:
+            content = content[level]
+
+        if index != None:
+            return content[index] + [self.get_chunkservers(content[index][0])]
         else:
-            return self.retrieve(path[1:], index, content)
+            result = []
+            for chunk in content:
+                result += content[index] + [self.get_chunkservers(content[chunk][0])]
+            return result
 
     def update(self, path, index, value, replicas = False, container = None):
         """
