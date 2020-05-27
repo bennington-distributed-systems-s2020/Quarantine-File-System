@@ -1,4 +1,4 @@
-import requests
+import requests, json
 
 def append(append_chunk, content):
     """
@@ -30,15 +30,16 @@ def append(append_chunk, content):
     #i'll build data index on top of this once ik how julian will handle data index in the above step
     append_request_r = requests.post("http://{0}/append-request".format(append_chunk["primary"]),
                                      json={json.dumps({"chunk_handle": append_chunk["chunk_handle"], "data_index": ""})})
-
+    append_request_status = append_request_r.status_code()
+    append_request_json = append_request_r.json()
     #if status code is 500 or we get return 3 => bad error happened. cancel operation and log
-    if append_request_r.status_code() == 500 or append_request_r.json() == "3":
+    if append_request_status == 500 or append_request_json == "3":
         return 500
     #status code 400 means keyerror, ioerror or oserror, most of the time the file is not found
-    elif append_request_r.status_code() == 400 or append_request_r.json() == "1":
+    elif append_request_status == 400 or append_request_json == "1":
         return 400
     #chunk too full try on next chunk: call "ac" on master
-    elif append_request_r.json() == "2":
+    elif append_request_json == "2":
         return 301
     #the only situation left is a success
     else:

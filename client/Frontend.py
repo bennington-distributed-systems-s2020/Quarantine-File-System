@@ -46,10 +46,11 @@ def create(file_name):
     fetch_r = requests.get("http://{0}:{1}/fetch".format(chunkserver_config["master"][0],
                                                          chunkserver_config["master"][1]),
                                                          json={json.dumps({"filename": file_name, "command": "c"})})
-    if fetch_r.status_code() == 500:
+    fetch_status = fetch_r.status_code()
+    if fetch_status == 500:
         app.logger.critical("Exception on master when creating {0}".format(file_name))
         abort(500)
-    elif fetch_r.status_code() != 200:
+    elif fetch_status != 200:
         app.logger.warning("Unknown error on Master when trying to create {0}".format(file_name))
         abort(500)
     else:
