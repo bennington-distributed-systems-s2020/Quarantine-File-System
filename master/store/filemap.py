@@ -60,25 +60,24 @@ class FileMap:
         Add or mutate a chunk
         """
         if not container: container = self.files
-        content = container
         path = self.process_path(path)
         if len(path) == 1:
             # Update if the chunk exists
             if replicas: self.chunkhandle_map[value[0]] = replicas
-            if len(content) - 1 <= index and index != None:
+            if len(container) - 1 <= index and index != None:
                 if len(value) == 1:
-                    content[index][1] = value    # chunk size
+                    container[index][1] = value    # chunk size
                 else:
-                    content[index] = value
-                return content
+                    container[index] = value
+                return container
             else:
                 # Append to chunk list if it doesn't exist
-                content[index] += [value]
+                container[index] += [value]
                 if replicas: self.chunkhandle_map[value[0]] = replicas
-                return content
+                return container
         else:
-            content[path[0]] = self.update(path[1:], index, value, replicas, content[path[0]])
-            return content
+            container[path[0]] = self.update(path[1:], index, value, replicas, container[path[0]])
+            return container
 
     def make_path(self, path, top = True, directory = False, container = False):
         path = self.process_path(path)
@@ -99,12 +98,11 @@ class FileMap:
             
     def verify_path(self, path, container = False):
         path = self.process_path(path)
-        content = container
         if not container: container = self.files
         if len(path) == 1:
             return path[0] in container
         else:
-            return self.verify_path(path[1:], content[path[0]])
+            return self.verify_path(path[1:], container[path[0]])
 
     def remove(self, path, index = None, container = False):
         if not container:
