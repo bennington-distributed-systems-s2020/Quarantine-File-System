@@ -60,7 +60,6 @@ def fetch(file_path, command, chunk_index=None):
         return jsonify(json_response) # return json packaged chunk info
 
 
-
 @app.route('/create/file/<string:new_file_path>/<int:file_size>', methods = ['POST'])
 def create_file(new_file_path, file_size):
     """
@@ -71,8 +70,8 @@ def create_file(new_file_path, file_size):
                     don't know the exact format yet is in the value of the key yet, need to ask
     """
     error = {"error": "invalid file path"}
-    json_response = {}
-    output = create_new_file(new_file_path, file_size)
+    json_response = {}    
+    output = create_new_file(new_file_path, file_size = 0) 
     if output == False:
         return jsonify(error)
     else:

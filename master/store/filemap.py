@@ -42,14 +42,25 @@ class FileMap:
         """
         path = self.process_path(path)
         content = self.files
-        for level in path:
-            content = content[level]
 
+        print("path: {0}".format(path))
+        c = 0
+        print("content: {0}".format(content))
+        for level in path:
+            c += 1
+            print(c)
+            content = content[level]
+            print(c)
+            print("level: {0}".format(level))
+            print(type(level))
+            print("content: {0}".format(content))
+        
         if index != None:
             chunk_info = [content[index]] + self.get_chunk_data(content[index])
             return chunk_info
         else:
-            return [self.retrieve(path, chunk_index) for chunk_index in range(0, len(content[level]))]
+            # return [self.retrieve(path, chunk_index) for chunk_index in range(0, len(content[level]))]
+            return [[chunk] + self.get_chunk_data(chunk) for chunk in content]
 
     def add(self, path, index, chunkhandle, replicas = None, container = None):
         """
@@ -65,15 +76,15 @@ class FileMap:
             # print("container path[0] {0}".format(container[path[0]]))
             for index in range(0, len(path)):
                 container[path[0]].append(chunkhandle)
-                return container
+                return self.get_chunk_data(chunkhandle)
 
             else:
                 # Append to chunk list if it doesn't exist
                 container[path[0]] += [chunkhandle]
-                return container
+                return self.get_chunk_data(chunkhandle)
         else:
             container[path[0]] = self.add(path[1:], index, chunkhandle, replicas, container[path[0]])
-            return container
+            return self.get_chunk_data(chunkhandle)
 
     def change(self, chunkhandle, size = 0, replicas = None):
         if chunkhandle in self.chunkhandle_map:
@@ -119,7 +130,6 @@ class FileMap:
                 content = container
                 for level in path[:-1]:
                     content = content[level]
-                    print(content)
                 return True
             except:
                 return False
@@ -207,15 +217,28 @@ if __name__ == "__main__":
     # testing
     f = FileMap()
     f.make_path("/fun.txt")
-    f.add("/fun.txt", -1,"fuckyou",["a"])
-    a = f.retrieve("/fun.txt", 0)
+
     print(f.files)
-    print(f.chunkhandle_map)
+    # print(f.chunkhandle_map)
     print("\n")
+
+    print("before: {0}".format(f.files))
+
+    f.add("/fun.txt", -1,"fuckyou",["a"])
+    # print("chunk info: {0}".format(chunk_handle))
+
+    print("after: {0}".format(f.files))
+    # print(f.chunkhandle_map)
+    print("\n")
+    # f.retrieve("/fun.txt", 0)
+
+
+
+
+    """
 
     # print(f.verify_path("/fun.txt"))
     
-
     f.make_path("/school/")
     print(f.files)
     print(f.chunkhandle_map)
@@ -226,7 +249,6 @@ if __name__ == "__main__":
     print(f.verify_path("/school/"))
 
 
-    """
     f.add("/school/hello.txt", 0, "chunkhanle", ["server","server2"])
 
     print(f.files)

@@ -252,10 +252,17 @@ if __name__ == "__main__":
     assert get_file_parent_directory_path("/school/cs.txt") == "/school/", "failed to get directory's parent directory path"
     
     #test creating a file
+
+    new_file_chunk_info = create_new_file("/school/cs/fun.txt", 0)
+
+    print(new_file_chunk_info)
+    """
+
     assert create_new_file("/school/cs/fun.txt", 10000000) != False, "failed to create file"
     assert create_new_file("/school/cs/hello.txt", 50) != False, "failed to create file"
     assert metadata_handler.verify_path("/school/cs/fun.txt") == True, "failed to create a file"
     assert metadata_handler.verify_path("/school/cs/hello.txt") == True, "failed to create a file"
+
 
     # print(metadata_handler.store.files)
     # print(metadata_handler.store.files)
@@ -299,9 +306,7 @@ if __name__ == "__main__":
 
     # test getting a file's directory path
     assert get_file_parent_directory_path("/school/cs/fun.txt") == "/school/cs/", "failed to get file parent directory path"
-    
 
-    ###
     # test remove a directory
     assert metadata_handler.verify_path("/school/music/") == True, "failed to get file parent directory path"
     print(metadata_handler.store.files)
@@ -325,3 +330,4 @@ if __name__ == "__main__":
     print(metadata_handler.store.files)
     print(metadata_handler.store.chunkhandle_map)
     print("\n")
+    """
