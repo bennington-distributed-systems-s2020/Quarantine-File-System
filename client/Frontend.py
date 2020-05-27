@@ -43,8 +43,8 @@ def example():
 @app.route('/create/<string:file_name>')
 def create(file_name):
     #Call fetch on Master to create the file
-    fetch_r = requests.get("http://{0}:{1}/fetch".format(chunkserver_config["master"][0],
-                                                         chunkserver_config["master"][1]),
+    fetch_r = requests.get("http://{0}:{1}/fetch".format(client_config["master"][0],
+                                                         client_config["master"][1]),
                                                          json={json.dumps({"filename": file_name, "command": "c"})})
     fetch_status = fetch_r.status_code()
     if fetch_status == 500:
@@ -126,8 +126,8 @@ def append(file_name, content):
     content = request_json["content"]
 
     #Call fetch on Master to get the primary and the replicas
-    fetch_r = requests.get("http://{0}:{1}/fetch".format(chunkserver_config["master"][0],
-                                                         chunkserver_config["master"][1]),
+    fetch_r = requests.get("http://{0}:{1}/fetch".format(client_config["master"][0],
+                                                         client_config["master"][1]),
                                                          json={json.dumps({"filename": file_name, "command": "a"})})
     #see API doc for return format
     append_chunk = fetch_r.json()[0] #if fetch was done correctly this should just have 1 chunk in the list
@@ -136,8 +136,8 @@ def append(file_name, content):
     return_code = client_append.append(append_chunk, content)
     #if we have to append again on a new chunk
     if return_code == 301:
-        fetch_new_r = requests.get("http://{0}:{1}/fetch".format(chunkserver_config["master"][0],
-                                                                 chunkserver_config["master"][1]),
+        fetch_new_r = requests.get("http://{0}:{1}/fetch".format(client_config["master"][0],
+                                                                 client_config["master"][1]),
                                                                  json={json.dumps({"filename": file_name, "command": "ac"})})
         new_append_chunk = fetch_new_r.json()[0]
         #call the append function again on the new chunk
