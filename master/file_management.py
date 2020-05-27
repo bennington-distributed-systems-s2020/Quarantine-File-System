@@ -307,18 +307,20 @@ if __name__ == "__main__":
     ###
     # test remove a directory
     assert metadata_handler.verify_path("/school/music/") == True, "failed to get file parent directory path"
-    metadata_handler.remove("/school/music/")
     print(metadata_handler.store.files)
     print(metadata_handler.store.chunkhandle_map)
+    print("\n")
+    assert metadata_handler.remove("/school/music/") == None, "failed to remove a directory"
+    assert metadata_handler.verify_path("/school/music/") == False, "failed to verify directory path"
+    print(metadata_handler.store.files)
+    print(metadata_handler.store.chunkhandle_map)
+    print("\n")
 
-    #assert metadata_handler.remove("/school/music/") == None, "failed to remove a directory"
-    #assert metadata_handler.verify_path("/school/music/") == False, "failed to verify directory path"
-    
-    """
     # test remove a file
     assert metadata_handler.remove("/school/cs/fun.txt") == True, "failed to remove a file"
     assert metadata_handler.verify_path("/school/cs/fun.txt") == False, "failed to remove a file"
 
+    """
     # test remove a directory that has file in it
     assert metadata_handler.remove("/school/cs/") == True, "failed to remove a directory that has file in it"
     assert metadata_handler.verify_path("/school/cs/fun.txt") == False, "failed to remove a directory that has file in it"

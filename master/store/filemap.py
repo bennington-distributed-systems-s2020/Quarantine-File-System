@@ -56,16 +56,15 @@ class FileMap:
         Add or mutate a chunk
         """
         path = self.process_path(path)
-        print("path: {0}".format(path))
+        # print("path: {0}".format(path))
         if container == None: container = self.files
-        print("container: {0}".format(container))
+        # print("container: {0}".format(container))
 
         if len(path) == 1:
             self.change(chunkhandle, 0, replicas)
-            print("container path[0] {0}".format(container[path[0]]))
-
+            # print("container path[0] {0}".format(container[path[0]]))
             for index in range(0, len(path)):
-                container[path[0]][index] = chunkhandle
+                container[path[0]].append(chunkhandle)
                 return container
 
             else:
@@ -124,18 +123,26 @@ class FileMap:
         Remove file or chunkhandles
         """
         path = self.process_path(path)
-        # print("path: {0}".format(path))
+        print("path: {0}".format(path))
         content = self.files
-        for level in path[:-2]:
-            content = content[level]
-        # print("final content {0}".format(content))
+
+        print("final content {0}".format(content))
         # print(content[path[-2]])
+
+        # if removing a directory
         if index == None:
-            del content[path[-2]]
-            # else:
-            #     for i in range(0,len(content[path[-1]])):
-            #         self.remove(path, i)
-            #     del content[path[-1]]
+            # if it's a director under the root
+            if len(path) == 1:
+                for level in path[:-2]:
+                    content = content[level]
+                del content[path[-2]]
+            # if not, travese to the parent directory of the directory that will be removed
+            # then remove it
+            else:
+                for level in path[:-2]:
+                    content = content[level]
+                print("current content: {0}".format(content))
+                del content[path[-2]]
         else:
             del content[path[-1]][i]
             
@@ -188,8 +195,19 @@ if __name__ == "__main__":
 
     print(f.files)
     print(f.chunkhandle_map)
+    print("\n")
 
-    f.remove("/school/")
+    f.make_path("/school/music/")
+    f.make_path("/school/music/trap/")
+    print("after make path")
     print(f.files)
     print(f.chunkhandle_map)
+    print("\n")
+
+
+    f.remove("/school/music/")
+    print("after removing /music/")
+    print(f.files)
+    print(f.chunkhandle_map)
+    print("\n")
 
