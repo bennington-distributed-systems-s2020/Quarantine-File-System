@@ -68,13 +68,13 @@ class MetadataStorage:
         # logging
         self.write_to_log("mutate_chunk", [filename, chunk_index, size])
 
-    def create_chunk(self, filename, chunkhandle, chunkservers):
+    def create_chunk(self, filename, chunkhandle, chunkservers, chunk_index=None):
         """
         Append a new chunk to file
         """
         try:
-            self.store.update(filename, chunk_index,  ################ TODO: where is the chunk_index?
-                             [chunkhandle, 0], chunkservers)
+            self.store.update(filename, chunk_index, [chunkhandle, 0], chunkservers)
+            return [chunkhandle, 0, chunkservers]
         except:
             return {"error": "failed to retrieve chunk, please verify if file_path and chunk_index are valid"}
        

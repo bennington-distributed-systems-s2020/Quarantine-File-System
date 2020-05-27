@@ -65,7 +65,7 @@ class FileMap:
         if len(path) == 1:
             # Update if the chunk exists
             if replicas: self.chunkhandle_map[value[0]] = replicas
-            if len(content) - 1 <= index:
+            if len(content) - 1 <= index and index != None:
                 if len(value) == 1:
                     content[index][1] = value    # chunk size
                 else:
