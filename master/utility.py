@@ -2,6 +2,8 @@
 """
     utility.py -- general helper functions
     Date: 5/13/2020
+
+    NOTICE: server address could be changed to dns if time allows.
 """
 import json
 
@@ -11,6 +13,7 @@ def get_chunkservers():
     Returns all chunkserver IPs as listed in the JSON configuration. 
     Only reads from disk once, caches result.
     """
+    global chunkservers
     if chunkservers != None:
         return chunkservers
     config_file = 'master.json'
@@ -23,3 +26,6 @@ def get_chunkservers():
             ]
         chunkservers = formatted
         return chunkservers
+
+if __name__ =="__main__":
+    print(get_chunkservers())
