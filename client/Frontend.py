@@ -14,11 +14,10 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(__name__)
-
 with open("client.json") as client_json:
     client_config = json.load(client_json)
 
+app = Flask(__name__)
 
 @app.route("/")
 def example():
@@ -73,7 +72,7 @@ def create_dir(dir_path):
 
 # Q: rewrote the spec for read. Note that the client does not have access to the metadata
 # Q: It'd have to call fetch to the Master in order to get the chunkhandle to read from
-@app.route('/read/<string:file_name>,<int:start_byte>,<int:byte_range>', method='GET')
+@app.route('/read/<string:file_name>,<int:start_byte>,<int:byte_range>', methods=['GET'])
 def read(file_path, start_byte, byte_range):
     """
     Reads out the requested file from the chunkserver
