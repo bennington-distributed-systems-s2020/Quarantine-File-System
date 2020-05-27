@@ -61,12 +61,12 @@ class MetadataStorage:
         Update store to reflect chunk creations and mutations
         """
         try:
-             self.store.change(chunkhandle) 
+             self.store.change(chunkhandle, size)
         except:
             return {"error": "failed to mutate chunk, please verify if file_path and chunk_index are valid"}
 
         # logging
-        self.write_to_log("mutate_chunk", [filename, chunk_index, size])
+        self.write_to_log("mutate_chunk", [chunkhandle, size]) ##############vairble
 
     def create_chunk(self, filename, chunkhandle, chunkservers, chunk_index=-1):
         """

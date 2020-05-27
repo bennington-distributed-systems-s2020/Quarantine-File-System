@@ -258,15 +258,27 @@ if __name__ == "__main__":
     assert metadata_handler.verify_path("/school/cs/hello.txt") == True, "failed to create a file"
 
     # print(metadata_handler.store.files)
+    # print(metadata_handler.store.files)
+    # chunk_handle = metadata_handler.get_chunk("/school/cs/hello.txt", 0)
+    # print(chunk_handle)
+
     # test mutate chunk size
+    chunk_handle = metadata_handler.get_chunk("/school/cs/hello.txt", 0)[0]
+    metadata_handler.mutate_chunk("3", 1000)
+
     print(metadata_handler.store.files)
-    chunk_handle = metadata_handler.get_chunk("/school/cs/hello.txt", 0)
+    print(metadata_handler.store.chunkhandle_map)
+
+    # geting the chunk_data according to chunk_handle
+    a = metadata_handler.store.get_chunk_data("3")
+    chunk_handle = metadata_handler.get_chunk("/school/cs/hello.txt", 0)[0]
+
+    print(a)
     print(chunk_handle)
+    print(metadata_handler.store.get_chunk_data(chunk_handle))
+    assert metadata_handler.store.get_chunk_data(chunk_handle)[0] == 1000, "failed to mutate chunk size"
 
-    # metadata_handler.mutate_chunk(, 1000)
-    # assert metadata_handler.get_chunk("/school/cs/hello.txt", 0)[1][0] == 1000, "failed to mutate chunk size"
 
-    """
     # test get file chunk according to handles
     fun_chunk_handle = get_file_chunk_handles("/school/cs/fun.txt", [0])
     hello_chunk_handle = get_file_chunk_handles("/school/cs/hello.txt", [0]) # get first index 0 chunk handle for the hello.txt
@@ -277,25 +289,31 @@ if __name__ == "__main__":
     # print(a[0])
     # print(a[0][0])
 
+
+
+
     # test create a new chunk for an existing file
     random_live_servers = get_servers_list_that_stores_new_file(live_chunk_server_set,3)
     assert metadata_handler.create_chunk("/school/cs/fun.txt","2299aac92", random_live_servers) != False, "failed to create new chunk for existing file"
+    print(metadata_handler.store.files)
     print(metadata_handler.store.chunkhandle_map)
     
+
     # test getting a file's directory path
     assert get_file_parent_directory_path("/school/cs/fun.txt") == "/school/cs/", "failed to get file parent directory path"
     
+
 
     ###
     # test remove a directory
     assert metadata_handler.verify_path("/school/music/") == True, "failed to get file parent directory path"
     metadata_handler.remove("/school/music/")
     print(metadata_handler.store.files)
+    print(metadata_handler.store.chunkhandle_map)
 
     #assert metadata_handler.remove("/school/music/") == None, "failed to remove a directory"
     #assert metadata_handler.verify_path("/school/music/") == False, "failed to verify directory path"
     
-    """
     """
     # test remove a file
     assert metadata_handler.remove("/school/cs/fun.txt") == True, "failed to remove a file"

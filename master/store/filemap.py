@@ -56,11 +56,15 @@ class FileMap:
         Add or mutate a chunk
         """
         path = self.process_path(path)
+        print("path: {0}".format(path))
         if container == None: container = self.files
+        print("container: {0}".format(container))
 
         if len(path) == 1:
             self.change(chunkhandle, 0, replicas)
-            if index in range(0, len(path)):
+            print("container path[0] {0}".format(container[path[0]]))
+
+            for index in range(0, len(path)):
                 container[path[0]][index] = chunkhandle
                 return container
 
@@ -74,7 +78,7 @@ class FileMap:
 
     def change(self, chunkhandle, size = 0, replicas = None):
         if chunkhandle in self.chunkhandle_map:
-            self.chunkhandles_map[chunkhandle][0] = size
+            self.chunkhandle_map[chunkhandle][0] = size
         else:
             self.chunkhandle_map[chunkhandle] = [size, replicas]
 
@@ -120,17 +124,18 @@ class FileMap:
         Remove file or chunkhandles
         """
         path = self.process_path(path)
+        # print("path: {0}".format(path))
         content = self.files
-        for level in path[:-1]:
+        for level in path[:-2]:
             content = content[level]
-
+        # print("final content {0}".format(content))
+        # print(content[path[-2]])
         if index == None:
-            if content[path[-1]] == []:
-                del content[path[-1]]
-            else:
-                for i in range(0,len(content[path[-1]])):
-                    self.remove(path, i)
-                del content[path[-1]]
+            del content[path[-2]]
+            # else:
+            #     for i in range(0,len(content[path[-1]])):
+            #         self.remove(path, i)
+            #     del content[path[-1]]
         else:
             del content[path[-1]][i]
             
@@ -174,6 +179,17 @@ if __name__ == "__main__":
     f.make_path("/fun.txt")
     f.add("/fun.txt", -1,"fuckyou",["a"])
     a = f.retrieve("/fun.txt", 0)
-    print(a)
 
-    
+    f.make_path("/school/")
+    # def add(self, path, index, chunkhandle, replicas = None, container = None):
+    f.make_path("/school/hello.txt")
+
+    f.add("/school/hello.txt", 0, "chunkhanle", ["server","server2"])
+
+    print(f.files)
+    print(f.chunkhandle_map)
+
+    f.remove("/school/")
+    print(f.files)
+    print(f.chunkhandle_map)
+
