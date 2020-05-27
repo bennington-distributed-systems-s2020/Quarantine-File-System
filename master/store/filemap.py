@@ -46,12 +46,9 @@ class FileMap:
             content = content[level]
 
         if index != None:
-            return content[index] + [self.get_chunk_data(content[index])]
+            return content[level][index] + [self.get_chunk_data(content[index])]
         else:
-            result = []
-            for chunk in content:
-                result += content[index] + [self.get_chunk_data(content[chunk])]
-            return result
+            return [self.retrieve(path, chunk_index) for chunk_index in range(0, len(content[level]))]
 
     def add(self, path, index, chunkhandle, replicas = None, container = None):
         """
