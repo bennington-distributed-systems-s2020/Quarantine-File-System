@@ -118,26 +118,26 @@ class FileMap:
             return self.verify_path(path[1:], container[path[0]])
 
     def remove(self, path, index = None, container = False):
-        if not container:
-            if self.verify_path(path):
-                if path[-1] == "":
-                    del path[-1]
-                self.files = self.remove(path[1:],container=self.files[""])
-                return True
+        """
+        Remove file or chunkhandles
+        """
+        path = self.process_path(path)
+        content = self.files
+        for level in path[:-1]:
+            content = content[level]
+
+        if index == None:
+            if content[path[-1]] == []:
+                del content[path[-1]]
             else:
-                return False
+                for i in range(0,len(content[path[-1]]))
+                    self.remove(path, i)
+                del content[path[-1]]
         else:
-            if len(path) <= 2:
-                if index != None:
-                    del container[path[0]][path[1]]
-                else:
-                    del container[path[0]][path[1]][index]
-                return container
-            else:
-                container = self.remove(path[1:], index, container[path[0]])
-                return container
-                
-                
+            del content[path[-1]][i]
+            
+            
+            
     #Add an active server or remove an inactive one
     def toggle(self, chunkserver, on):
         # This is slow right now, but I don't have an intelligent way
