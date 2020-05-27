@@ -1,3 +1,5 @@
+import requests
+
 def append(append_chunk, content):
     """
     append the content to the append_chunk. The format of append_chunk is that of a dictionary as detailed
