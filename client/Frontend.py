@@ -120,8 +120,8 @@ def write(file_name, content):
 
 # modifying append and rewrite it to take in a json instead
 # since it might not be a good idea to fit 16mb of content in an url
-@app.route('/append/', strict_slashes=False, methods=['GET', 'POST'])
-def append(file_name, content):
+@app.route('/append/', strict_slashes=False, methods=['POST'])
+def append():
     """
     Adds data to the end of a previously existing file
     :param file_name: Name of file to be appended to
