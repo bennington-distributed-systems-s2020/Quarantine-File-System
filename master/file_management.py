@@ -95,6 +95,7 @@ def get_file_parent_directory_path(file_path):
     return parent_directory_path
 
 
+############## buggy
 def create_new_file(file_path, file_size):
     global metadata_handler
     global number_of_replicas
@@ -105,7 +106,8 @@ def create_new_file(file_path, file_size):
     if verify_file_parent_directory_path(file_path) == False:
         return False
     number_of_chunks_needed = get_number_of_chunk_needed(file_size)
-
+    output = None
+        
     # create new file with number of chunks needed in the metadata
     for _ in range(number_of_chunks_needed): 
         # get random live server list according to number of replicas set in config

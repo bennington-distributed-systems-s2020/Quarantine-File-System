@@ -52,10 +52,8 @@ class MetadataStorage:
         """
         try:
             return self.store.retrieve(filename, chunk_index)
-        except KeyError:
-            raise FileNameKeyError(filename)
-        except IndexError:
-            raise ChunkIndexError(filename, chunk_index)
+        except:
+            return {"error": "failed to retrieve chunk, please verify if file_path and chunk_index are valid"}
             
     
     def mutate_chunk(self, filename, chunk_index, size):
@@ -64,10 +62,8 @@ class MetadataStorage:
         """
         try:
              self.store.update(filename, chunk_index, [size]) 
-        except KeyError:
-            raise FileNameKeyError(filename)
-        except IndexError:
-            raise ChunkIndexError(filename, chunk_index)
+        except:
+            return {"error": "failed to mutate chunk, please verify if file_path and chunk_index are valid"}
 
         # logging
         self.write_to_log("mutate_chunk", [filename, chunk_index, size])
@@ -79,8 +75,8 @@ class MetadataStorage:
         try:
             self.store.update(filename, chunk_index,  ################ TODO: where is the chunk_index?
                              [chunkhandle, 0], chunkservers)
-        except KeyError:
-            raise FileNameKeyError(filename)
+        except:
+            return {"error": "failed to retrieve chunk, please verify if file_path and chunk_index are valid"}
        
         # logging
         self.write_to_log("create_chunk", [filename, chunkhandle, chunkservers])
@@ -112,10 +108,8 @@ class MetadataStorage:
         """
         try:
             self.store.remove(filename, chunk_index)
-        except KeyError:
-            return FileNameKeyError(filename)
-        except IndexError:
-            raise ChunkIndexError(filename, chunk_index)
+        except:
+            return {"error": "failed to retrieve chunk, please verify if file_path and chunk_index are valid"}
         
         # logging
         self.write_to_log("remove", [filename, chunk_index])
