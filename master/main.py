@@ -44,21 +44,20 @@ def fetch(file_path, command, chunk_index=None):
     # for a read
     if command == "r":
         # since this function takes a list of index, so I used [chunk_index] to make it a list
-        chunk_info = get_file_chunk_handles(file_path, [chunk_index])[0]
-
-        json_response["chunk_handle"] = chunk_info[0]   # extract chunk handle
-        json_response["replica"] = chunk_info[2]  # extract replica locations
+        chunk_info = metadata_handler.get_chunk(file_path)
+        json_response = json_response[file_path] = chunk_info
         return jsonify(json_response)
     
-    # for adding a new chunk on an existing file
-    if command == "ac":
-        output = create_new_chunk(file_path)
-        if output == False:
-            return jsonify({"error": "failed to create new chunk"}) # failed to created new chunk for some reason
-        json_response["chunk_handle"] = output[0]
-        json_response["replica"] = output[1]
+    # for return the last chunk of the file
+    elif command == "a":
+        chunk_info = metadata_handler.get_chunk(file_path)
+        json_response = json_response[file_path] = chunk_info
         return jsonify(json_response) # return json packaged chunk info
-
+    
+    elif command == "ac":
+        chunk_info = create_new_chunk(file_path)
+        json_response = json_response[file_path] = chunk_info
+        return jsonify(json_response)
 
 @app.route('/create/file/<string:new_file_path>/<int:file_size>', methods = ['POST'])
 def create_file(new_file_path, file_size):
@@ -69,14 +68,17 @@ def create_file(new_file_path, file_size):
     :return: all the chunk handles being created in json file under the key called "chunk_handle".  
                     don't know the exact format yet is in the value of the key yet, need to ask
     """
+    global metadata_handler
     error = {"error": "invalid file path"}
-    json_response = {}    
-    output = create_new_file(new_file_path, file_size = 0) 
-    if output == False:
-        return jsonify(error)
-    else:
+    json_response = {"chunk_info": None}
+    try:
+        metadata_handler.create_path(new_file_path)
+        create_new_chunk(new_file_path)
+        chunk_info = metadata_handler.get_chunk(new_file_path)[-1]
         json_response["chunk_handle"] = output
         return jsonify(json_response)
+    except:
+        return jsonify(error)
 
 
 @app.route('/create/directory/<string:new_directory_path>', methods = ['POST'])
@@ -124,28 +126,28 @@ def heartbeat(chunk_server,chunk_server_state):
         return 500
     return 200
 
-##TODO: update chunksize in metadata here when i receive the grant request. 
-@app.route('/lease-request/<string:chunk_handle>/<string:chunk_server_addr>', methods=['GET'])
-def lease_request(chunk_handle, chunk_server_addr):
+@app.route('/lease-request/<string:chunk_handle>/<string:chunk_server_addr>/<int:chunk_size>', methods=['GET'])
+def lease_request(chunk_handle, chunk_server_addr, chunk_size):
     """
     Caller: Chunkserver
     :param chunk_handle: Chunk handle in hex for a lease  
     :return: Boolean (True) if the operation succeeded 
     """
     global lease
+    global metadata_handler
+    metadata_handler.mutate_chunk(chunk_handle, chunk_size)
     if lease.grant_lease(chunk_handle, chunk_server_addr) == True:
         return lease.chunk_lease
     else:
         return False
 
 if __name__ == "__main__":
-    # test lease
-    lease.grant_lease("11","127.0.0.1")
-    output = "127.0.0.1"
-    assert lease.chunk_lease["11"]['primary'] == output, "lease grant failed"
+    # # test lease
+    # lease.grant_lease("11","127.0.0.1")
+    # output = "127.0.0.1"
+    # assert lease.chunk_lease["11"]['primary'] == output, "lease grant failed"
 
-    # # thread_update_live_server = threading.Thread(target=update_live_chunk_server) # update available chunkserver, every 30s, runs forever
-    # thread_app_run = threading.Thread(target=app.run)
-
-    # # thread_update_live_server.start()
-    # thread_app_run.start()
+    thread_update_live_server = threading.Thread(target=update_live_chunk_server) # update available chunkserver, every 30s, runs forever
+    thread_app_run = threading.Thread(target=app.run)
+    thread_update_live_server.start()
+    thread_app_run.start()

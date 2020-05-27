@@ -148,8 +148,9 @@ def create_new_chunk(file_path):
     random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
 
     # create new chunk for chunkservers on the random list
-    output = metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
-    return output
+    metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
+    output = metadata_handler.get_chunk(file_path)
+    return output[-1]
 
 def remove_file(file_path):
     global metadata_handler
@@ -251,9 +252,9 @@ if __name__ == "__main__":
     # test the method of getting directory's parent directory path
     assert get_file_parent_directory_path("/school/cs.txt") == "/school/", "failed to get directory's parent directory path"
     
-    #test creating a file
-
-    new_file_chunk_info = create_new_file("/school/cs/fun.txt", 0)
+    #test appending a new chunk!
+    metadata_handler.create_path("/school/cs/fun.txt")
+    new_file_chunk_info = create_new_chunk("/school/cs/fun.txt")
 
     print(new_file_chunk_info)
     """
