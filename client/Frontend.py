@@ -42,12 +42,26 @@ def example():
 #    else
 #        return metadata
 
-@app.route('/create/<string:file_name>')
-def create(file_name):
-    # Call fetch on Master to create the file
-    fetch_r = requests.get("http://{0}:{1}/fetch".format(client_config["master"][0], client_config["master"][1]),
-                           json={json.dumps({"filename": file_name, "command": "c"})})
-    if fetch_r.status_code == 500:
+@app.route('/create/file/<string:file_path>')
+def create_file(file_path):
+    fetch_r = requests.post("http://{0}:{1}/create/file/{2}/{3}"
+                             .format(client_config["master"][0], client_config["master"][1], file_path, 0))
+
+    if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
+        app.logger.critical("Exception on master when creating {0}".format(file_name))
+        abort(500)
+    elif fetch_r.status_code != 200:
+        app.logger.warning("Unknown error on Master when trying to create {0}".format(file_name))
+        abort(500)
+    else:
+        return 0  # success
+
+@app.route('/create/dir/<string:dir_path>')
+def create_dir(dir_path):
+    fetch_r = requests.post("http://{0}:{1}/create/directory/{2}"
+                             .format(client_config["master"][0], client_config["master"][1], dir_path))
+
+    if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
         app.logger.critical("Exception on master when creating {0}".format(file_name))
         abort(500)
     elif fetch_r.status_code != 200:
@@ -60,7 +74,7 @@ def create(file_name):
 # Q: rewrote the spec for read. Note that the client does not have access to the metadata
 # Q: It'd have to call fetch to the Master in order to get the chunkhandle to read from
 @app.route('/read/<string:file_name>,<int:start_byte>,<int:byte_range>', method='GET')
-def read(file_name, start_byte, byte_range):
+def read(file_path, start_byte, byte_range):
     """
     Reads out the requested file from the chunkserver
     :param file_name: Name of requested file
@@ -69,14 +83,15 @@ def read(file_name, start_byte, byte_range):
     :return: Text obtained from server
     """
     # Fetch things from the server.
-    fetch_r = requests.get("http://{0}:{1}/fetch".format(client_config["master"][0], client_config["master"][1]),
-                           json={json.dumps({"filename": file_name, "command": "r", "startbyte": start_byte,
-                                             "byterange": byte_range})})
-    if fetch_r.status_code == 500:
-        app.logger.critical("Exception on master when reading {0}".format(file_name))
+    # Q: modified read to match api spec from master
+    # Q: ignoring chunk index for now
+    fetch_r = requests.get("http://{0}:{1}/fetch/{2}/{3}/{4}"
+                            .format(client_config["master"][0], client_config["master"][1], file_path, "r", 0))
+    if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
+        app.logger.critical("Exception on master when reading {0}".format(file_path))
         abort(500)
     elif fetch_r.status_code != 200:
-        app.logger.warning("Unknown error on Master when trying to read {0}".format(file_name))
+        app.logger.warning("Unknown error on Master when trying to read {0}".format(file_path))
         abort(500)
     else:
         return fetch_r  # success
@@ -112,22 +127,21 @@ def append(file_name, content):
     content = request_json["content"]
 
     # Call fetch on Master to get the primary and the replicas
-    fetch_r = requests.get("http://{0}:{1}/fetch".format(client_config["master"][0],
-                                                         client_config["master"][1]),
-                           json={json.dumps({"filename": file_name, "command": "a"})})
+    fetch_r = requests.get("http://{0}:{1}/fetch/{2}/{3}"
+                            .format(client_config["master"][0], client_config["master"][1], file_path, "a"))
     # see API doc for return format
     append_chunk = fetch_r.json()[0]  # if fetch was done correctly this should just have 1 chunk in the list
 
     # call append
-    return_code = client_append.append(append_chunk, content)
+    return_tuple = client_append.append(append_chunk, content)
+    return_code = return_tuple[0]
     # if we have to append again on a new chunk
     if return_code == 301:
-        fetch_new_r = requests.get("http://{0}:{1}/fetch".format(client_config["master"][0],
-                                                                 client_config["master"][1]),
-                                   json={json.dumps({"filename": file_name, "command": "ac"})})
+        fetch_r = requests.get("http://{0}:{1}/fetch/{2}/{3}"
+                                .format(client_config["master"][0], client_config["master"][1], file_path, "a"))
         new_append_chunk = fetch_new_r.json()[0]
         # call the append function again on the new chunk
-        return_code = client_append.append(new_append_chunk, content)
+        return_code = client_append.append(new_append_chunk, return_tuple[1])
 
     # on a new chunk we could not get 301
     if return_code == 500:

@@ -1,6 +1,7 @@
-import json
-import requests
+import requests, json, base64
 
+with open("config.json", "r") as f:
+    config_json = json.load(f)
 
 def append(append_chunk, content):
     """
@@ -14,32 +15,65 @@ def append(append_chunk, content):
            replica: [<address of replica1>, <address of replica2>,...]
         }
     :param content: base64 encoded string of the data to be appended
-    :return: a code representing what the hell happened
+    :return: a tuple representing what the hell happened
         200: things went alright
-        301: permanently moved aka run it again on the new chunk
+        301: permanently moved aka run it again on the new chunk, the 2nd value is the remainin data to append
         400: abort with error code 400
         500: abort with error code 500
     """
+    #pulling information
+    chunk_handle = append_chunk["chunk_handle"]
+    primary = append_chunk["primary"]
+    replica = append_chunk["replica"]
+
     # 2) Break the data to 16mb chunks and send them to the replicas with the corresponding indices
-    # it's probably a good idea to wrap this part up in a function
-    # so that it could easily be called again when we get an operation failed bc not enough space
-    # in append request
-    # UPDATE: it's also probably a good idea to wrap the entirety of append request as well
+    #converting back to bytes
+    data = base64.decodebytes(content.encode())
+
+    #slicing to 16mb blocks
+    append_list = []
+    chunk_size = config_json["MAX_APPEND_LIMIT"]
+    for i in range(0, len(data), chunk_size):
+        #re encoding as string
+        data_base64_string = base64.encodebytes(data[i:i+chunk_size]).decode()
+        append_list.append(data_base64_string)
+
+    #sending to replicas
+    for i in range(len(append_list)):
+        #send to primary
+        try:
+            append_handle(primary, chunk_handle, append_list[i], i)
+        except:
+            return (500)
+
+        #send to replica
+        for r in replica:
+            try:
+                append_handle(r, chunk_handle, append_list[i], i)
+            except:
+                return (500)
 
     # 3) Send append request to the primary once client has received acknowledgement from all replicas
-    # i'll build data index on top of this once ik how julian will handle data index in the above step
-    append_request_r = requests.post("http://{0}/append-request".format(append_chunk["primary"]),
-                                     json={
-                                         json.dumps({"chunk_handle": append_chunk["chunk_handle"], "data_index": ""})})
-    # if status code is 500 or we get return 3 => bad error happened. cancel operation and log
-    if append_request_r.status_code == 500 or append_request_r.json() == "3":
-        return 500
-    # status code 400 means keyerror, ioerror or oserror, most of the time the file is not found
-    elif append_request_r.status_code == 400 or append_request_r.json() == "1":
-        return 400
-    # chunk too full try on next chunk: call "ac" on master
-    elif append_request_r.json() == "2":
-        return 301
-    # the only situation left is a success
-    else:
-        return 200
+    for i in range(len(append_list)):
+        append_request_r = requests.post("http://{0}/append-request".format(primary),
+                json={json.dumps({"chunk_handle": chunk_handle, "data_index": i})})
+        # if status code is 500 or we get return 3 => bad error happened. cancel operation and log
+        if append_request_r.status_code == 500 or append_request_r.json() == "3":
+            return (500)
+        # status code 400 means keyerror, ioerror or oserror, most of the time the file is not found
+        elif append_request_r.status_code == 400 or append_request_r.json() == "1":
+            return (400)
+        # chunk too full try on next chunk: call "ac" on master
+        elif append_request_r.json() == "2":
+            #constructing remaining data
+            remaining = "".join(append_list[i:])
+            return (301, remaining)
+        # the only situation left is a success
+        else:
+            return (200)
+
+def append_handle(address, chunk_handle, data, index):
+    append_r = requests.post("http://{0}/append".format(address),
+            json={json.dumps({"chunk_handle": chunk_handle, "data_index": index, "data": data})})
+    if append_r.status_code != 200 or append_r.json() == "2":
+        raise
