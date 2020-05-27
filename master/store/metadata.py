@@ -56,12 +56,12 @@ class MetadataStorage:
             return {"error": "failed to retrieve chunk, please verify if file_path and chunk_index are valid"}
             
     
-    def mutate_chunk(self, filename, chunk_index, size):
+    def mutate_chunk(self, chunkhandle, size):
         """
         Update store to reflect chunk creations and mutations
         """
         try:
-             self.store.update(filename, chunk_index, [size]) 
+             self.store.change(chunkhandle) 
         except:
             return {"error": "failed to mutate chunk, please verify if file_path and chunk_index are valid"}
 
@@ -73,7 +73,7 @@ class MetadataStorage:
         Append a new chunk to file
         """
         try:
-            self.store.update(filename, chunk_index, [chunkhandle, 0], chunkservers)
+            self.store.add(filename, chunk_index, chunkhandle, chunkservers)
             return self.get_chunk(filename)[-1]
         except:
             return {"error": "failed to retrieve chunk, please verify if file_path and chunk_index are valid"}

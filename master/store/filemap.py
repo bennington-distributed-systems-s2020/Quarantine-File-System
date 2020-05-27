@@ -46,32 +46,24 @@ class FileMap:
             content = content[level]
 
         if index != None:
-            return content[index] + [self.get_chunkservers(content[index][0])]
+            return content[index] + [self.get_chunk_data(content[index])]
         else:
             result = []
             for chunk in content:
-                result += content[index] + [self.get_chunkservers(content[chunk][0])]
+                result += content[index] + [self.get_chunk_data(content[chunk])]
             return result
 
-    def update(self, path, index, value, replicas = False, container = None):
+    def add(self, path, index, chunkhandle, replicas = None, container = None):
         """
         Add or mutate a chunk
         """
         path = self.process_path(path)
-        if container == None: 
-            container = self.files
-            self.files[path[0]] = self.update(path[1:], index, value, replicas, self.files[path[0]])
-            return
+        if container == None: container = self.files
 
         if len(path) == 1:
-            # Update if the chunk exists
-            if replicas: self.chunkhandle_map[value[0]] = replicas
-
-            if index != None:
-                if len(value) == 1:
-                    container[path[0]][index][1] = value    # chunk size
-                else:
-                    container[path[0]][index] = value
+            if index not in range(0, len(path)):
+                self.change(chunkhandle, size, replicas)
+                container[path[0]][index] = chunkhandle
                 return container
 
             else:
@@ -79,8 +71,14 @@ class FileMap:
                 container[path[0]] += [value]
                 return container
         else:
-            container[path[0]] = self.update(path[1:], index, value, replicas, container[path[0]])
+            container[path[0]] = self.add(path[1:], index, value, replicas, container[path[0]])
             return container
+
+    def change(self, chunkhandle, size = 0, replicas = None):
+        if chunkhandle in self.chunkhandles_map:
+            self.chunkhandles_map[chunkhandle][0] = size
+        else:
+            self.chunkhandles_map[chunkhandle] = [size, replicas]
 
     def make_path(self, path, top = True, directory = False, container = False):
         path = self.process_path(path)
@@ -153,7 +151,7 @@ class FileMap:
                     self.chunkhandle_map[chunkhandle] += [chunkserver] 
                     
 
-    def get_chunkservers(self, chunkhandle):
+    def get_chunk_data(self, chunkhandle):
         return self.chunkhandle_map[chunkhandle]
 
     def list_chunkservers(self):
