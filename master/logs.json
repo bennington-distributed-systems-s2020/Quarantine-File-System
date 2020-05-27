@@ -1,3 +1,112 @@
 {
-  "logs": []
+  "logs": [
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/cs/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/music/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/cs/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/music/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/cs/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/music/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/cs/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/music/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/cs/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/music/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/cs/"
+      ]
+    },
+    {
+      "function_name": "create_path",
+      "arguments": [
+        "/school/music/"
+      ]
+    }
+  ]
 }

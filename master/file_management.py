@@ -106,20 +106,17 @@ def create_new_file(file_path, file_size):
     if verify_file_parent_directory_path(file_path) == False:
         return False
     number_of_chunks_needed = get_number_of_chunk_needed(file_size)
-    output = None
-        
-    # create new file with number of chunks needed in the metadata
-    for _ in range(number_of_chunks_needed): 
-        # get random live server list according to number of replicas set in config
-        random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
-        
-        # get chunk handle
-        chunk_handle = metadata_handler.get_chunk_handle()
-        # assign new chunks to different servers all the time. distribute chunks well
-        metadata_handler.create_chunk(file_path, chunk_handle, random_chunk_server_list) #takes a list of chunkserver
-        
     try:
-        output = metadata_handler.get_chunk(chunk_handle)
+        # create new file with number of chunks needed in the metadata
+        for _ in range(number_of_chunks_needed): 
+            # get random live server list according to number of replicas set in config
+            random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
+            
+            # get chunk handle
+            chunk_handle = metadata_handler.get_chunk_handle()
+            # assign new chunks to different servers all the time. distribute chunks well
+            metadata_handler.create_chunk(file_path, chunk_handle, random_chunk_server_list) #takes a list of chunkserver
+        output = metadata_handler.get_chunk(file_path)
         return output
     except:
         return {"error": "failed to grab chunk"}
@@ -151,8 +148,8 @@ def create_new_chunk(file_path):
     random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
 
     # create new chunk for chunkservers on the random list
-    metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
-    return True # success
+    output = metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
+    return output
 
 def remove_file(file_path):
     global metadata_handler
@@ -228,65 +225,66 @@ if __name__ == "__main__":
     o = get_servers_list_that_stores_new_file(live_server, 1)
     print(o)
 
-    # # test get chunk size needed
-    # assert get_number_of_chunk_needed(-1) == False, "failed test"
-    # assert get_number_of_chunk_needed("19") == False, "failed test"
-    # assert get_number_of_chunk_needed(9999999999) == 157, "failed test"
+    # test get chunk size needed
+    assert get_number_of_chunk_needed(-1) == False, "failed test"
+    assert get_number_of_chunk_needed("19") == False, "failed test"
+    assert get_number_of_chunk_needed(9999999999) == 157, "failed test"
     
-    # # test get chunk handle
-    # assert type(metadata_handler.get_chunk_handle()) == str, "Failed to get chunk handle"
+    # test get chunk handle
+    assert type(metadata_handler.get_chunk_handle()) == str, "Failed to get chunk handle"
 
-    # # test get live_server list from metadata object
-    # assert type(metadata_handler.locate()) == list, "failed to get live server list"
+    # test get live_server list from metadata object
+    assert type(metadata_handler.locate()) == list, "failed to get live server list"
 
-    # # test creating new path
-    # assert metadata_handler.create_path("/school/") == None, "failed to create directory"
-    # assert metadata_handler.create_path("/school/cs/") == None, "failed to create directory"
-    # assert metadata_handler.create_path("/school/music/") == None, "failed to create directory" # here since the function is not returning anything
+    # test creating new path
+    assert metadata_handler.create_path("/school/") == None, "failed to create directory"
+    assert metadata_handler.create_path("/school/cs/") == None, "failed to create directory"
+    assert metadata_handler.create_path("/school/music/") == None, "failed to create directory" # here since the function is not returning anything
 
-    # # test verify existing directory path
-    # assert metadata_handler.verify_path("/school/") == True, "failed to verify directory"
-    # assert metadata_handler.verify_path("/school/cs/") == True, "failed to verify directory"
-    # assert metadata_handler.verify_path("/school/music/") == True, "failed to verify directory"
+    # test verify existing directory path
+    assert metadata_handler.verify_path("/school/") == True, "failed to verify directory"
+    assert metadata_handler.verify_path("/school/cs/") == True, "failed to verify directory"
+    assert metadata_handler.verify_path("/school/music/") == True, "failed to verify directory"
 
-    # # test the method of getting directory's parent directory path
-    # parent_directory_path = '/'.join("/school/cs/".split('/')[:-2]) + '/'
-    # assert get_file_parent_directory_path("/school/cs/") == "/school/", "failed to get directory's parent directory path"
+    # test the method of getting directory's parent directory path
+    assert get_file_parent_directory_path("/school/cs.txt") == "/school/", "failed to get directory's parent directory path"
+    
+    # test creating a file
+    assert create_new_file("school/cs/fun.txt", 10000000) =! False, "failed to create file"
+    assert create_new_file("school/cs/hello.txt", 50) != False, "failed to create file"
+    assert metadata_handler.verify_path("school/cs/fun.txt") == True, "failed to remove a file"
+    assert metadata_handler.verify_path("school/cs/hello.txt") == True, "failed to remove a file"
 
-    # # test creating a file
-    # assert create_new_file("school/cs/fun.txt", 10000000) == True, "failed to create file"
-    # assert create_new_file("school/cs/hello.txt", 50) == True, "failed to create file"
-    # assert metadata_handler.verify_path("school/cs/fun.txt") == True, "failed to remove a file"
-    # assert metadata_handler.verify_path("school/cs/hello.txt") == True, "failed to remove a file"
+    """
+    # test mutate chunk size
+    metadata_handler.mutate_chunk("school/cs/hello.txt", 0, 1000)
+    assert metadata_handler.get_chunk("school/cs/hello.txt", 0)[1] == 1000, "failed to mutate chunk size"
 
-    # # test mutate chunk size
-    # metadata_handler.mutate_chunk("school/cs/hello.txt", 0, 1000)
-    # assert metadata_handler.get_chunk("school/cs/hello.txt", 0)[1] == 1000, "failed to mutate chunk size"
+    # test get file chunk handles
+    fun_chunk_handle = get_file_chunk_handles("school/cs/fun.txt", [0])
+    hello_chunk_handle = get_file_chunk_handles("school/cs/hello.txt", [0]) # get first index 0 chunk handle for the hello.txt
+    assert hello_chunk_handle == "2", "failed to get correct chunk handle for the file"
+    assert fun_chunk_handle == "1", "failed to get correct chunk handle for the file"
 
-    # # test get file chunk handles
-    # fun_chunk_handle = get_file_chunk_handles("school/cs/fun.txt", [0])
-    # hello_chunk_handle = get_file_chunk_handles("school/cs/hello.txt", [0]) # get first index 0 chunk handle for the hello.txt
-    # assert hello_chunk_handle == "2", "failed to get correct chunk handle for the file"
-    # assert fun_chunk_handle == "1", "failed to get correct chunk handle for the file"
+    # test create a new chunk for an existing file
+    live_chunk_server_list = ["server1", "server2", "server3"]
+    assert metadata_handler.create_chunk("school/cs/fun.txt","2299aac92", live_chunk_server_list) != False, "failed to create new chunk for existing file"
 
-    # # test create a new chunk for an existing file
-    # live_chunk_server_list = ["server1", "server2", "server3"]
-    # assert metadata_handler.create_chunk("school/cs/fun.txt","2299aac92", live_chunk_server_list) == True, "failed to create new chunk for existing file"
+    # test getting a file's directory path
+    assert get_file_parent_directory_path("school/cs/fun.txt") == "school/cs/", "failed to get file parent directory path"
+    
+    ###
+    # test remove a directory
+    assert metadata_handler.verify_path("school/music/") == True, "failed to get file parent directory path"
+    assert metadata_handler.remove("school/music/") == True, "failed to get file parent directory path"
+    assert metadata_handler.verify_path("school/music/") == False, "failed to get file parent directory path"
 
-    # # test getting a file's directory path
-    # assert get_file_parent_directory_path("school/cs/fun.txt") == "school/cs/", "failed to get file parent directory path"
+    # test remove a file
+    assert metadata_handler.remove("school/cs/fun.txt") == True, "failed to remove a file"
+    assert metadata_handler.verify_path("school/cs/fun.txt") == False, "failed to remove a file"
 
-    # # test remove a directory
-    # assert metadata_handler.verify_path("school/music/") == True, "failed to get file parent directory path"
-    # assert metadata_handler.remove("school/music/") == True, "failed to get file parent directory path"
-    # assert metadata_handler.verify_path("school/music/") == False, "failed to get file parent directory path"
-
-    # # test remove a file
-    # assert metadata_handler.remove("school/cs/fun.txt") == True, "failed to remove a file"
-    # assert metadata_handler.verify_path("school/cs/fun.txt") == False, "failed to remove a file"
-
-    # # test remove a directory that has file in it
-    # assert metadata_handler.remove("school/cs/") == True, "failed to remove a directory that has file in it"
-    # assert metadata_handler.verify_path("school/cs/fun.txt") == False, "failed to remove a directory that has file in it"
-    # assert metadata_handler.remove("school/cs/") == False, "failed to remove a directory that has file in it"
-
+    # test remove a directory that has file in it
+    assert metadata_handler.remove("school/cs/") == True, "failed to remove a directory that has file in it"
+    assert metadata_handler.verify_path("school/cs/fun.txt") == False, "failed to remove a directory that has file in it"
+    assert metadata_handler.remove("school/cs/") == False, "failed to remove a directory that has file in it"
+    """
