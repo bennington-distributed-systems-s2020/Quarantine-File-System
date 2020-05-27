@@ -4,5 +4,6 @@
     "CHUNK_PATH": "./chunk/",
     "WRITE_BUFFER_PATH": "./buffer/",
     "MAX_APPEND_LIMIT":  16777216,
-    "CHUNK_SIZE": 67108864
+    "CHUNK_SIZE": 67108864,
+    "HEARTBEAT_DELAY": 30
 }
