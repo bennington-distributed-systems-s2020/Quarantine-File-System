@@ -54,6 +54,7 @@ with open(number_of_replicas_json) as f:
 metadata_handler = metadata.MetadataStorage.retrieve_storage()
 
 live_chunk_server_set = set()
+
 ####################################
 
 
@@ -219,10 +220,12 @@ def get_file_chunk_handles(file_path, chunk_index_list):
 
 
 if __name__ == "__main__":
-    # test get random live server function
-    live_server = {(3, 3), (1, 1), (2, 2)}
-    o = get_servers_list_that_stores_new_file(live_server, 1)
-    print(o)
+    # fake chunk server below built for testing
+    live_chunk_server_set = set([("a", 34), ("b", 35), ("c", 36), ("d", 37), ("e", 38), ("f", 39) ])
+    # # test get random live server function
+    # live_server = {(3, 3), (1, 1), (2, 2)}
+    # o = get_servers_list_that_stores_new_file(live_server, 1)
+    # print(o)
 
     # test get chunk size needed
     assert get_number_of_chunk_needed(-1) == False, "failed test"
@@ -258,7 +261,7 @@ if __name__ == "__main__":
     # test mutate chunk size
     metadata_handler.mutate_chunk("/school/cs/hello.txt", 0, 1000)
     # assert metadata_handler.get_chunk("/school/cs/hello.txt", 0)[1] == 1000, "failed to mutate chunk size"
-    
+
     a = metadata_handler.store.files
     print(a)
     print(a['']['school']["cs"]['hello.txt'])
