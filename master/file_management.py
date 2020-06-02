@@ -68,7 +68,7 @@ def update_live_chunk_server():
         now = datetime.now()
         to_remove_list = []
         for chunk_server, datetime_heard_heartbeat in live_chunk_server_set:
-            if (datetime_heard_heartbeat - now).second > 30:
+            if (datetime_heard_heartbeat - now).seconds > 30:
                 to_remove_list.append((chunk_server, datetime_heard_heartbeat))
         
         for i in range(len(to_remove_list)):
@@ -124,16 +124,20 @@ def create_new_file(file_path, file_size):
 def create_new_directory(directory_path):
     global metadata_handler
 
+    # check if the input is a directory path or not by checking the ending
+    if directory_path.split('/')[-1] != '':
+        return False
+
     # get parent directory of the directoy path we creating.
     parent_directory_path = '/'.join(directory_path.split('/')[:-2]) + '/'
 
     # verify parent directory
     if verify_file_parent_directory_path(parent_directory_path) == False:
-        return False 
+        return False
     
     # if valid, add the new directory in the metadata
-    metadata_handler.create_path(directory_path)
-    return True # success
+    result = metadata_handler.create_path(directory_path)
+    return result
 
 def create_new_chunk(file_path):
     global metadata_handler

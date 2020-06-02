@@ -62,6 +62,7 @@ class FileMap:
             # return [self.retrieve(path, chunk_index) for chunk_index in range(0, len(content[level]))]
             return [[chunk] + self.get_chunk_data(chunk) for chunk in content]
 
+    ########################### rewrite it if this function does not work well after more testing
     def add(self, path, index, chunkhandle, replicas = None, container = None):
         """
         Add or mutate a chunk
@@ -83,6 +84,7 @@ class FileMap:
                 container[path[0]] += [chunkhandle]
                 return container
         else:
+
             container[path[0]] = self.add(path[1:], index, chunkhandle, replicas, container[path[0]])
             return container
 
@@ -92,32 +94,30 @@ class FileMap:
         else:
             self.chunkhandle_map[chunkhandle] = [size, replicas]
 
-    def make_path(self, path, top = True, directory = False, container = False):
+    def make_path(self, path):
         path = self.process_path(path)
-        if top and len(path) == 1:
+        # handle cases when user only enters one character
+        if len(path) == 1 and path != "/":
             return False
-        elif top:
-            directory = path[-1]==""
-
-            if directory:
-                if not self.verify_path(path[:-2]):
-                    return False
-                path = path[:-1]
-            else:
-                if not self.verify_path(path[:-1]):
-                    return False
-            self.files[path[0]] = self.make_path(path[1:], False, directory, self.files[path[0]])
+        elif len(path) == 1 and path == "/":
             return True
-        elif len(path) == 1:
-            if path[0] in container:
-                return False
-            else:
-                container[path[0]] = {} if directory else []
-                return container
-        else:
-            content = self.make_path(path[1:], False, directory, container[path[0]])
-            container[path[0]] = content
-            return container
+        
+        # traverse to parent directory and create new directory
+        parent_directory_list = path[:-2]
+        new_directory = path[-2]
+        curr = self.files
+
+        try:
+            for direcotory in parent_directory_list:
+                curr = curr[direcotory]
+            # now we add new directory to the metadata
+            curr[new_directory] = {}
+            return True
+        except:
+            return False
+
+
+        
             
     def verify_path(self, path, container = False):
         path = self.process_path(path)
@@ -216,15 +216,26 @@ class FileMap:
 if __name__ == "__main__":
     # testing
     f = FileMap()
-    f.make_path("/fun.txt")
+    f.make_path("/fun/")
 
-    print(f.files)
+    print("metadata: ", f.files)
     # print(f.chunkhandle_map)
     print("\n")
 
+
+    f.make_path("/fun/")
+
+    print("metadata: ", f.files)
+    # print(f.chunkhandle_map)
+    print("\n")
+
+
+    """
+
     print("before: {0}".format(f.files))
 
-    f.add("/fun.txt", -1,"fuckyou",["a"])
+    f.make_path("/fun.txt")
+    f.add("/fun.txt", -1,"oops",["a"])
     # print("chunk info: {0}".format(chunk_handle))
 
     print("after: {0}".format(f.files))
@@ -234,8 +245,6 @@ if __name__ == "__main__":
 
 
 
-
-    """
 
     # print(f.verify_path("/fun.txt"))
     

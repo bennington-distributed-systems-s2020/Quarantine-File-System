@@ -68,7 +68,7 @@ def fetch(file_path, command, chunk_index=None):
         return jsonify(json_response)
 
 @app.route('/create/file/<path:new_file_path>', methods = ['GET'])
-def create_file(new_file_path, file_size):
+def create_file(new_file_path):
     """
     Caller: Client
     :param new_file_path: path of the file being created 
@@ -99,10 +99,9 @@ def create_directory(new_directory_path):
                     if failed, return {"error": "parent directory does not exist"}
     """
     new_directory_path = "/" + new_directory_path
-    error = {"error": "parent directory does not exist"}
+    error = {"error": "invalid path"}
     success = {"success": "directory created"}
     output = create_new_directory(new_directory_path)
-
     if output == False:
         return jsonify(error)
     else:
@@ -121,7 +120,8 @@ def heartbeat(chunk_server,chunk_server_state):
         return str(400)
     try:
         global live_chunk_server_set
-        if chunk_server_state == "False":
+        chunk_server_state = chunk_server_state.lower
+        if chunk_server_state == "false":
             # remove from the set if its been set False
             to_remove = None
             for chunkserver, date_time in live_chunk_server_set:
@@ -130,8 +130,10 @@ def heartbeat(chunk_server,chunk_server_state):
                     break
             live_chunk_server_set.remove(to_remove)
 
-        elif chunk_server_state == "True":
+        elif chunk_server_state == "true":
             live_chunk_server_set.add((chunk_server, datetime.now()))
+        else:
+            return "invalid statement"
     except:
         return str(500)
     return str(200)

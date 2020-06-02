@@ -86,12 +86,10 @@ class MetadataStorage:
         Create file or directory with no chunks if it doesnt exist
         If string ends with `/`, a directory is created
         """
-
-        if not self.store.make_path(filename):
-            return "Path already exists"
-        
+        result = self.store.make_path(filename)
         # logging
         self.write_to_log("create_path", [filename])
+        return result
 
     def verify_path(self, filename):
         """
