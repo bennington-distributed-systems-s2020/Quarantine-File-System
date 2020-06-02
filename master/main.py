@@ -77,11 +77,17 @@ def create_file(new_file_path):
                     don't know the exact format yet is in the value of the key yet, need to ask
     """
     global metadata_handler
+    global live_chunk_server_set
     new_file_path = "/" + new_file_path
     error = {"error": "something went wrong"}
     error_invalid_path = {"error": "invalid file path"}
+    error_no_live_chunk_server = {"error": "there is no available chunkserver right now, please wait for a moment"}
     error_file_exists = {"error": "file already exists"}
     json_response = {"chunk_info": None}
+
+    # check if there is any live chunkserver at all return error if none
+    if len(live_chunk_server_set) == 0:
+        return jsonify(error_no_live_chunk_server)
 
     # verify file directory
     if verify_file_parent_directory_path(new_file_path) == False:
@@ -93,9 +99,11 @@ def create_file(new_file_path):
 
     try:
         metadata_handler.create_path(new_file_path)
-        create_new_chunk(new_file_path)
-        chunk_info = metadata_handler.get_chunk(new_file_path)[-1]
-        json_response["chunk_info"] = chunk_info
+        result = create_new_chunk(new_file_path)
+        if result == False:
+            return jsonify(error_no_live_chunk_server)
+
+        json_response["chunk_info"] = result
         return jsonify(json_response)
     except:
         return jsonify(error)
@@ -110,6 +118,7 @@ def create_directory(new_directory_path):
                     if failed, return {"error": "parent directory does not exist"}
     """
     new_directory_path = "/" + new_directory_path
+    print("new directory path: ", new_directory_path)
     error = {"error": "invalid path"}
     success = {"success": "directory created"}
     output = create_new_directory(new_directory_path)

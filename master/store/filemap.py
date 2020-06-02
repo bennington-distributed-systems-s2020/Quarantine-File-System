@@ -43,17 +43,17 @@ class FileMap:
         path = self.process_path(path)
         content = self.files
 
-        print("path: {0}".format(path))
+        # print("path: {0}".format(path))
         c = 0
-        print("content: {0}".format(content))
+        # print("content: {0}".format(content))
         for level in path:
             c += 1
-            print(c)
+            # print(c)
             content = content[level]
-            print(c)
-            print("level: {0}".format(level))
-            print(type(level))
-            print("content: {0}".format(content))
+            # print(c)
+            # print("level: {0}".format(level))
+            # print(type(level))
+            # print("content: {0}".format(content))
         
         if index != None:
             chunk_info = [content[index]] + self.get_chunk_data(content[index])
@@ -96,15 +96,15 @@ class FileMap:
 
     def make_path(self, path):
         path = self.process_path(path)
+        # print("path: ", path)
         # handle cases when user only enters one character
         if len(path) == 1 and path != "/":
             return False
         elif len(path) == 1 and path == "/":
             return True
-        
 
         # handle directory creation
-        if path[-1] == "/":
+        if path[-1] == "":
             # traverse to parent directory and create new directory
             parent_directory_list = path[:-2]
             new_directory = path[-2]
@@ -115,12 +115,13 @@ class FileMap:
                     curr = curr[direcotory]
                 # now we add new directory to the metadata
                 curr[new_directory] = {}
+                # print("files: ", self.files)
                 return True
             except:
                 return False
 
-        # handle directory creation
-        if path[-1] != "/":
+        # handle file creation
+        if path[-1] != "":
             parent_directory_list = path[:-1]
             new_file_name = path[-1]
             curr = self.files
@@ -130,6 +131,7 @@ class FileMap:
                     curr = curr[direcotory]
                 # add the file path in metadata
                 curr[new_file_name] = []
+                # print("files: ", self.files)
                 return True
             except:
                 return False
@@ -172,15 +174,32 @@ class FileMap:
         # if removing a directory
         if index == None:
             if(path[-1] == ""):
-                # traverse to the parent directory and delete the directory
+                # traverse to the parent directory
                 for level in path[:-2]:
                     content = content[level]
+
+                curr_directory_name = path[-2]
+                # access the every file under the directory
+                # remove every chunkhandles in the chunkhandle_map for each file
+                for _, chunks_info in content[curr_directory_name].items():
+                    for chunk in chunks_info:
+                        del self.chunkhandle_map[chunk]
+
+                # delete the directory
                 del content[path[-2]]
+                
+            # remove a whole file and remove all chunk in the chunkhandle_map according to the chunkhandle
             else:
+                file_name = path[-1]
+                # traverse to the parent directory of the file
                 for level in path[:-1]:
                     content = content[level]
-                for chunk in range(0, len(content[path[-1]])):
-                    del content[path[-1]][0]
+
+                # access the file remove every chunk info in chunkhandle_map for the file
+                for chunk in content[file_name]:
+                    del self.chunkhandle_map[chunk]
+                
+                # now remove the file in metadata beautifully
                 del content[path[-1]]
 
         # remove a chunk according to chunk index
@@ -232,16 +251,22 @@ if __name__ == "__main__":
     # testing
     f = FileMap()
     f.make_path("/fun/")
+    f.make_path("/fun.txt")
+    f.make_path("/hello.txt")
+    f.add("/hello.txt", -1, "1", [1,2,3])
+    f.add("/hello.txt", 0, "2", [1,2,3])
 
+    
+    print("chunkhandle map: ", f.chunkhandle_map)
     print("metadata: ", f.files)
     # print(f.chunkhandle_map)
     print("\n")
 
 
-    f.make_path("/fun/")
-
+    f.remove("/hello.txt")
+    print("after remove")
+    print("chunkhandle map: ", f.chunkhandle_map)
     print("metadata: ", f.files)
-    # print(f.chunkhandle_map)
     print("\n")
 
 

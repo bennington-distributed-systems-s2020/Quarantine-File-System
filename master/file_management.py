@@ -50,7 +50,6 @@ number_of_replicas_json = "numberOfReplicasConfig.json"
 with open(number_of_replicas_json) as f:
     number_of_replicas = json.load(f)["numberOfReplicas"]
 
-# get metadata_handler##########################TODO: fix this
 metadata_handler = metadata.MetadataStorage.retrieve_storage()
 
 live_chunk_server_set = set()
@@ -61,14 +60,14 @@ live_chunk_server_set = set()
 def update_live_chunk_server():
     global live_chunk_server_set
     while True:
-        # after 30s if chunkserver did not heartbeat master, we will remove
+        # after 300s if chunkserver did not heartbeat master, we will remove
         # the chunkserver from available chunkserver list.
         # live_chunk_server_set stored a list of tupple like: (chunkserver, datetime_heard_heartbeat)
-        sleep(30)
+        sleep(300)  ####################### change it back
         now = datetime.now()
         to_remove_list = []
         for chunk_server, datetime_heard_heartbeat in live_chunk_server_set:
-            if (datetime_heard_heartbeat - now).seconds > 30:
+            if (datetime_heard_heartbeat - now).seconds > 300:   ################change it back to 30 or 60 later
                 to_remove_list.append((chunk_server, datetime_heard_heartbeat))
         
         for i in range(len(to_remove_list)):
@@ -125,14 +124,14 @@ def create_new_directory(directory_path):
     global metadata_handler
 
     # check if the input is a directory path or not by checking the ending
-    if directory_path.split('/')[-1] != '':
+    if directory_path.split('/')[-1] != '/':
         return False
 
     # get parent directory of the directoy path we creating.
     parent_directory_path = '/'.join(directory_path.split('/')[:-2]) + '/'
 
     # verify parent directory
-    if verify_file_parent_directory_path(parent_directory_path) == False:
+    if metadata_handler.verify_path(parent_directory_path) == False:
         return False
     
     # if valid, add the new directory in the metadata
@@ -144,12 +143,19 @@ def create_new_chunk(file_path):
     global number_of_replicas
     global live_chunk_server_set
 
+    # make sure the file is valid
     if metadata_handler.verify_path(file_path) == False:
         return False
     
     # get random chunkservers list to store the chunk
     new_chunk_hundle = metadata_handler.get_chunk_handle() 
     random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
+
+    print("random_chunk_server_list: ". random_chunk_server_list)
+
+    # verify random_chunk_server_list return False it's there is no live server in it
+    if random_chunk_server_list == False or len(random_chunk_server_list) == 0:
+        return False
 
     # create new chunk for chunkservers on the random list
     metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
@@ -191,20 +197,28 @@ def get_number_of_chunk_needed(file_size):
         return number_of_chunks_needed
 
 
-def get_servers_list_that_stores_new_file(live_servers_tuple_set, number_of_replicas):
+def get_servers_list_that_stores_new_file(live_servers_tuple_set, number_of_replicas):    
     live_servers_num = len(live_servers_tuple_set)
     live_chunk_server_list= []
     random_server_list = []
     if live_servers_num <= 0:
         return False
     
-    for chunk_server, _ in live_servers_tuple_set:
-        live_chunk_server_list.append(chunk_server)
-        
-    for _ in range(number_of_replicas):
-        randomNum = randint(0,live_servers_num-1)
-        random_server_list.append(live_chunk_server_list[randomNum])
-    return random_server_list
+    if live_servers_num < number_of_replicas:
+        for chunk_server, _ in live_servers_tuple_set:
+            if live_servers_num == 0:
+                break
+            live_chunk_server_list.append(chunk_server)
+            live_servers_num -= 1
+            return random_server_list
+    else:
+        for chunk_server, _ in live_servers_tuple_set:
+            live_chunk_server_list.append(chunk_server)
+            
+        for _ in range(number_of_replicas):
+            randomNum = randint(0,live_servers_num-1)
+            random_server_list.append(live_chunk_server_list[randomNum])
+        return random_server_list
 
 
 def get_file_chunk_handles(file_path, chunk_index_list):

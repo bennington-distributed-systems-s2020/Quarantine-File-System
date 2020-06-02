@@ -206,11 +206,16 @@ class MetadataStorage:
             json.dump(self.store.checkpoint(), json_file, indent = 2)
 
 if __name__ == "__main__":
-    # tes
+    # test
     m = MetadataStorage.retrieve_storage()
     assert m.logfile_path == "logs.json", "failed to create instance"
     
-    m.logfile_path = "path changed testing"
-    s = MetadataStorage.retrieve_storage()
-    assert m == s, "failed to make it singleton"
-    assert s.logfile_path == m.logfile_path, "failed to make it singleton"
+    # m.logfile_path = "path changed testing"
+    # s = MetadataStorage.retrieve_storage()
+    # assert m == s, "failed to make it singleton"
+    # assert s.logfile_path == m.logfile_path, "failed to make it singleton"
+
+    print(m.verify_path('/'))
+
+    m.create_path("/cs/")
+    print(m.store.files)
