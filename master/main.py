@@ -21,8 +21,8 @@ def example():
 # you get all chunk info for the file. slice it up from there. return json
 
 # need to reform this function so that chunkserver can call and create new chunks or files
-@app.route('/fetch/<string:file_path>/<string:command>', methods=['GET'])
-@app.route('/fetch/<string:file_path>/<string:command>/<int:chunk_index>', methods=['GET'])
+@app.route('/fetch/<path:file_path>/<string:command>', methods=['GET'])
+@app.route('/fetch/<path:file_path>/<string:command>/<int:chunk_index>', methods=['GET'])
 def fetch(file_path, command, chunk_index=None):
     """
     Caller: Client
@@ -35,6 +35,7 @@ def fetch(file_path, command, chunk_index=None):
                 if fails: return error in json format {"error": "error messagesss"}
     """
     global metadata_handler
+    file_path = "/" + file_path
     error = {"error": "invalid file path"}
     json_response = {}
 
@@ -59,7 +60,7 @@ def fetch(file_path, command, chunk_index=None):
         json_response = json_response[file_path] = chunk_info
         return jsonify(json_response)
 
-@app.route('/create/file/<string:new_file_path>/<int:file_size>', methods = ['POST'])
+@app.route('/create/file/<path:new_file_path>', methods = ['GET'])
 def create_file(new_file_path, file_size):
     """
     Caller: Client
@@ -69,19 +70,20 @@ def create_file(new_file_path, file_size):
                     don't know the exact format yet is in the value of the key yet, need to ask
     """
     global metadata_handler
+    new_file_path = "/" + new_file_path
     error = {"error": "invalid file path"}
     json_response = {"chunk_info": None}
     try:
         metadata_handler.create_path(new_file_path)
         create_new_chunk(new_file_path)
         chunk_info = metadata_handler.get_chunk(new_file_path)[-1]
-        json_response["chunk_handle"] = output
+        json_response["chunk_info"] = chunk_info
         return jsonify(json_response)
     except:
         return jsonify(error)
 
 
-@app.route('/create/directory/<string:new_directory_path>', methods = ['POST'])
+@app.route('/create/directory/<path:new_directory_path>', methods = ['GET'])
 def create_directory(new_directory_path):
     """
     Caller: Client
@@ -89,6 +91,7 @@ def create_directory(new_directory_path):
     :return: json file. if success, return {"success": "directory created"}
                     if failed, return {"error": "parent directory does not exist"}
     """
+    new_directory_path = "/" + new_directory_path
     error = {"error": "parent directory does not exist"}
     success = {"success": "directory created"}
     output = create_new_directory(new_directory_path)
@@ -99,7 +102,7 @@ def create_directory(new_directory_path):
         return jsonify(success)
 
 
-@app.route('/heartbeat/<string:chunk_server>/<string:chunk_server_state>', methods=['POST'])
+@app.route('/heartbeat/<string:chunk_server>/<string:chunk_server_state>', methods=['GET'])
 def heartbeat(chunk_server,chunk_server_state):
     """
     Caller: Chunkserver
@@ -108,23 +111,23 @@ def heartbeat(chunk_server,chunk_server_state):
     :return: status code 200 means"OK"; code 500 means "error" ; code 400 means invalid inputs
     """
     if chunk_server == None or chunk_server_state == None:
-        return 400
+        return str(400)
     try:
         global live_chunk_server_set
         if chunk_server_state == "False":
             # remove from the set if its been set False
             to_remove = None
-            for cs, d in live_chunk_server_set:
-                if cs == chunk_server:
-                    to_remove = (cs,d)
+            for chunkserver, date_time in live_chunk_server_set:
+                if chunkserver == chunk_server:
+                    to_remove = (chunkserver, date_time)
                     break
             live_chunk_server_set.remove(to_remove)
 
         elif chunk_server_state == "True":
             live_chunk_server_set.add((chunk_server, datetime.now()))
     except:
-        return 500
-    return 200
+        return str(500)
+    return str(200)
 
 @app.route('/lease-request/<string:chunk_handle>/<string:chunk_server_addr>/<int:chunk_size>', methods=['GET'])
 def lease_request(chunk_handle, chunk_server_addr, chunk_size):
@@ -141,6 +144,23 @@ def lease_request(chunk_handle, chunk_server_addr, chunk_size):
     else:
         return False
 
+@app.route('/liveserver', methods = ['GET'])
+@app.route('/liveserver/', methods = ['GET'])
+def live_server():
+    global live_chunk_server_set
+    dictionary = {}
+    counter = 1
+    for live_server in live_chunk_server_set:
+        dictionary[counter] = live_server
+        counter += 1
+    return jsonify(dictionary)
+
+@app.route('/metadata')
+@app.route('/metadata/')
+def metadata():
+    global metadata_handler
+    return jsonify(metadata_handler.store.files)
+
 if __name__ == "__main__":
     # # test lease
     # lease.grant_lease("11","127.0.0.1")
@@ -151,3 +171,8 @@ if __name__ == "__main__":
     thread_app_run = threading.Thread(target=app.run)
     thread_update_live_server.start()
     thread_app_run.start()
+
+"""
+take path as input in flask
+https://flask.palletsprojects.com/en/1.1.x/quickstart/
+"""
