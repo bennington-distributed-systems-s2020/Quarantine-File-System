@@ -102,22 +102,37 @@ class FileMap:
         elif len(path) == 1 and path == "/":
             return True
         
-        # traverse to parent directory and create new directory
-        parent_directory_list = path[:-2]
-        new_directory = path[-2]
-        curr = self.files
 
-        try:
-            for direcotory in parent_directory_list:
-                curr = curr[direcotory]
-            # now we add new directory to the metadata
-            curr[new_directory] = {}
-            return True
-        except:
-            return False
+        # handle directory creation
+        if path[-1] == "/":
+            # traverse to parent directory and create new directory
+            parent_directory_list = path[:-2]
+            new_directory = path[-2]
+            curr = self.files
 
+            try:
+                for direcotory in parent_directory_list:
+                    curr = curr[direcotory]
+                # now we add new directory to the metadata
+                curr[new_directory] = {}
+                return True
+            except:
+                return False
 
-        
+        # handle directory creation
+        if path[-1] != "/":
+            parent_directory_list = path[:-1]
+            new_file_name = path[-1]
+            curr = self.files
+            # traverse to the parent directory:
+            try:
+                for direcotory in parent_directory_list:
+                    curr = curr[direcotory]
+                # add the file path in metadata
+                curr[new_file_name] = []
+                return True
+            except:
+                return False
             
     def verify_path(self, path, container = False):
         path = self.process_path(path)

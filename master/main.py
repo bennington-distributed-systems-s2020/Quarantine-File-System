@@ -59,7 +59,7 @@ def fetch(file_path, command, chunk_index=None):
     # for return the last chunk of the file
     elif command == "a":
         chunk_info = metadata_handler.get_chunk(file_path)
-        json_response = json_response[file_path] = chunk_info
+        json_response[file_path] = chunk_info
         return jsonify(json_response) # return json packaged chunk info
     
     elif command == "ac":
@@ -78,8 +78,19 @@ def create_file(new_file_path):
     """
     global metadata_handler
     new_file_path = "/" + new_file_path
-    error = {"error": "invalid file path"}
+    error = {"error": "something went wrong"}
+    error_invalid_path = {"error": "invalid file path"}
+    error_file_exists = {"error": "file already exists"}
     json_response = {"chunk_info": None}
+
+    # verify file directory
+    if verify_file_parent_directory_path(new_file_path) == False:
+        return jsonify(error_invalid_path)
+
+    # verify file, if file exist return "file created"
+    if metadata_handler.verify_path(new_file_path) == True:
+        return jsonify(error_file_exists)
+
     try:
         metadata_handler.create_path(new_file_path)
         create_new_chunk(new_file_path)
@@ -120,7 +131,7 @@ def heartbeat(chunk_server,chunk_server_state):
         return str(400)
     try:
         global live_chunk_server_set
-        chunk_server_state = chunk_server_state.lower
+        chunk_server_state = chunk_server_state.lower()
         if chunk_server_state == "false":
             # remove from the set if its been set False
             to_remove = None
