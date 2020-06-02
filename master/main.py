@@ -2,6 +2,13 @@
 """
     main.py - Provides a Flask API to receive requests from both the client and chunkservers
     Date: 5/12/2020
+
+    Notice: all the path input from user do not requires the root "/". 
+    for example: if we want to create a new directory called "school"
+                    we can call "127.0.0.1/create/directory/school/" # notice directory has to end with '/'
+                    here school is under directory "/" but user don't need to enter the root like "127.0.0.1/create/directory//school/
+                
+                 this applies to "create/file" "create/directory" and "fetch" end point
 """
 
 import threading
@@ -147,6 +154,9 @@ def lease_request(chunk_handle, chunk_server_addr, chunk_size):
 @app.route('/liveserver', methods = ['GET'])
 @app.route('/liveserver/', methods = ['GET'])
 def live_server():
+    """
+    call this endpoint, it returns all liveserver for checking liveserver and debuging purpose.
+    """
     global live_chunk_server_set
     dictionary = {}
     counter = 1
@@ -155,9 +165,13 @@ def live_server():
         counter += 1
     return jsonify(dictionary)
 
+
 @app.route('/metadata')
 @app.route('/metadata/')
-def metadata():
+def get_metadata():
+    """
+    call this endpoint, it returns the whole metadata as a json file for debugging purpose
+    """
     global metadata_handler
     return jsonify(metadata_handler.store.files)
 
