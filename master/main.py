@@ -110,7 +110,6 @@ def create_file(new_file_path):
             metadata_handler.remove(new_file_path)
         return jsonify(error)
 
-
 @app.route('/create/directory/<path:new_directory_path>', methods = ['GET'])
 def create_directory(new_directory_path):
     """
@@ -129,6 +128,33 @@ def create_directory(new_directory_path):
     else:
         return jsonify(success)
 
+@app.route('/remove/file/<path:file_path>')
+def to_remove_file(file_path):
+    file_path = "/" + file_path
+    error_invalid_path = {"error": "invalid path"}
+    error = {"error": "something went wrong"}
+    success = {"success": "successfully removed the file {0}".format(file_path)}
+
+    try:
+        if remove_file(file_path) == False:
+            return jsonify(error_invalid_path)
+        return jsonify(success)
+    except:
+        return jsonify(error)    
+
+@app.route('/remove/directory/<path:directory_path>')
+def to_remove_directory(directory_path):
+    directory_path = "/" + directory_path
+    error_invalid_path = {"error": "invalid path"}
+    error = {"error": "something went wrong"}
+    success = {"success": "successfully removed the file {0}".format(directory_path)}
+
+    try:
+        if remove_directory(directory_path) == False:
+            return jsonify(error_invalid_path)
+        return jsonify(success)
+    except:
+        return jsonify(error)    
 
 @app.route('/heartbeat/<string:chunk_server>/<string:chunk_server_state>', methods=['GET'])
 def heartbeat(chunk_server,chunk_server_state):
@@ -175,6 +201,7 @@ def lease_request(chunk_handle, chunk_server_addr, chunk_size):
     else:
         return False
 
+
 @app.route('/liveserver', methods = ['GET'])
 def live_server():
     """
@@ -197,6 +224,16 @@ def get_metadata():
     global metadata_handler
     return jsonify(metadata_handler.store.files)
 
+
+@app.route('/chunkinfo')
+def get_chunk_info():
+    """
+    call this endpoint, it returns all the chunks info as a json file for debugging purpose
+    """
+    global metadata_handler
+    return jsonify(metadata_handler.store.chunkhandle_map)
+
+
 if __name__ == "__main__":
     # # test lease
     # lease.grant_lease("11","127.0.0.1")
@@ -208,7 +245,11 @@ if __name__ == "__main__":
     thread_update_live_server.start()
     thread_app_run.start()
 
+
 """
 take path as input in flask
 https://flask.palletsprojects.com/en/1.1.x/quickstart/
+
+multi-threading:
+https://www.youtube.com/watch?v=IEEhzQoKtQU
 """
