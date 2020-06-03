@@ -85,6 +85,7 @@ def create_file(new_file_path):
     error_file_exists = {"error": "file already exists"}
     json_response = {"chunk_info": None}
 
+    print("live chunkserver set len: ", len(live_chunk_server_set))
     # check if there is any live chunkserver at all return error if none
     if len(live_chunk_server_set) == 0:
         return jsonify(error_no_live_chunk_server)
@@ -93,19 +94,20 @@ def create_file(new_file_path):
     if verify_file_parent_directory_path(new_file_path) == False:
         return jsonify(error_invalid_path)
 
-    # verify file, if file exist return "file created"
-    if metadata_handler.verify_path(new_file_path) == True:
-        return jsonify(error_file_exists)
-
     try:
+        if metadata_handler.verify_path(new_file_path) == True:
+            return jsonify(error_file_exists)
         metadata_handler.create_path(new_file_path)
         result = create_new_chunk(new_file_path)
         if result == False:
+            metadata_handler.remove(new_file_path)
             return jsonify(error_no_live_chunk_server)
 
         json_response["chunk_info"] = result
         return jsonify(json_response)
     except:
+        if metadata_handler.verify_path(new_file_path) == True:
+            metadata_handler.remove(new_file_path)
         return jsonify(error)
 
 
@@ -174,7 +176,6 @@ def lease_request(chunk_handle, chunk_server_addr, chunk_size):
         return False
 
 @app.route('/liveserver', methods = ['GET'])
-@app.route('/liveserver/', methods = ['GET'])
 def live_server():
     """
     call this endpoint, it returns all liveserver for checking liveserver and debuging purpose.
@@ -189,7 +190,6 @@ def live_server():
 
 
 @app.route('/metadata')
-@app.route('/metadata/')
 def get_metadata():
     """
     call this endpoint, it returns the whole metadata as a json file for debugging purpose

@@ -124,7 +124,7 @@ def create_new_directory(directory_path):
     global metadata_handler
 
     # check if the input is a directory path or not by checking the ending
-    if directory_path.split('/')[-1] != '/':
+    if directory_path.split('/')[-1] != '':
         return False
 
     # get parent directory of the directoy path we creating.
@@ -151,7 +151,7 @@ def create_new_chunk(file_path):
     new_chunk_hundle = metadata_handler.get_chunk_handle() 
     random_chunk_server_list = get_servers_list_that_stores_new_file(live_chunk_server_set, number_of_replicas)
 
-    print("random_chunk_server_list: ". random_chunk_server_list)
+    print("random_chunk_server_list: ", random_chunk_server_list)
 
     # verify random_chunk_server_list return False it's there is no live server in it
     if random_chunk_server_list == False or len(random_chunk_server_list) == 0:
@@ -199,25 +199,26 @@ def get_number_of_chunk_needed(file_size):
 
 def get_servers_list_that_stores_new_file(live_servers_tuple_set, number_of_replicas):    
     live_servers_num = len(live_servers_tuple_set)
-    live_chunk_server_list= []
+    live_server_list = []
     random_server_list = []
     if live_servers_num <= 0:
         return False
     
     if live_servers_num < number_of_replicas:
+        counter = live_servers_num
         for chunk_server, _ in live_servers_tuple_set:
-            if live_servers_num == 0:
+            if counter == 0:
                 break
-            live_chunk_server_list.append(chunk_server)
-            live_servers_num -= 1
-            return random_server_list
+            random_server_list.append(chunk_server)
+            counter -= 1
+        return random_server_list
     else:
         for chunk_server, _ in live_servers_tuple_set:
-            live_chunk_server_list.append(chunk_server)
+            live_server_list.append(chunk_server)
             
         for _ in range(number_of_replicas):
             randomNum = randint(0,live_servers_num-1)
-            random_server_list.append(live_chunk_server_list[randomNum])
+            random_server_list.append(live_server_list[randomNum])
         return random_server_list
 
 

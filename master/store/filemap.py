@@ -98,9 +98,9 @@ class FileMap:
         path = self.process_path(path)
         # print("path: ", path)
         # handle cases when user only enters one character
-        if len(path) == 1 and path != "/":
+        if len(path) == 1 and path[0] != "":
             return False
-        elif len(path) == 1 and path == "/":
+        elif len(path) == 1 and path[0] == "":
             return True
 
         # handle directory creation
