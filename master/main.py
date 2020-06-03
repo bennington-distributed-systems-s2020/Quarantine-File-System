@@ -49,22 +49,24 @@ def fetch(file_path, command, chunk_index=None):
     if metadata_handler.verify_path(file_path) == False:
         return jsonify(error)
 
-    # for a read
+    # return everything for the file
     if command == "r":
         # since this function takes a list of index, so I used [chunk_index] to make it a list
         chunk_info = metadata_handler.get_chunk(file_path)
-        json_response = json_response[file_path] = chunk_info
+        json_response[file_path] = chunk_info
         return jsonify(json_response)
     
-    # for return the last chunk of the file
+    # return the last chunk of the file
     elif command == "a":
-        chunk_info = metadata_handler.get_chunk(file_path)
+        chunk_info = metadata_handler.get_chunk(file_path)[-1]
         json_response[file_path] = chunk_info
         return jsonify(json_response) # return json packaged chunk info
     
+    # ac (append create). 
+    # Create a new empty chunk for that file then return the address for that chunk.
     elif command == "ac":
         chunk_info = create_new_chunk(file_path)
-        json_response = json_response[file_path] = chunk_info
+        json_response[file_path] = chunk_info
         return jsonify(json_response)
 
 @app.route('/create/file/<path:new_file_path>', methods = ['GET'])

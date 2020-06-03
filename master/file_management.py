@@ -259,9 +259,9 @@ if __name__ == "__main__":
     assert type(metadata_handler.locate()) == list, "failed to get live server list"
 
     # test creating new path
-    assert metadata_handler.create_path("/school/") == None, "failed to create directory"
-    assert metadata_handler.create_path("/school/cs/") == None, "failed to create directory"
-    assert metadata_handler.create_path("/school/music/") == None, "failed to create directory" # here since the function is not returning anything
+    assert metadata_handler.create_path("/school/") == True, "failed to create directory"
+    assert metadata_handler.create_path("/school/cs/") == True, "failed to create directory"
+    assert metadata_handler.create_path("/school/music/") == True, "failed to create directory" # here since the function is not returning anything
 
     # test verify existing directory path
     assert metadata_handler.verify_path("/school/") == True, "failed to verify directory"
