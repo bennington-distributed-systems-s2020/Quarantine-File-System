@@ -171,24 +171,30 @@ class FileMap:
         content = self.files
 
 
-        # if removing a directory
+        # when removing a directory or a file (when index == None)
         if index == None:
+            # remove a directory
             if(path[-1] == ""):
                 # traverse to the parent directory
                 for level in path[:-2]:
                     content = content[level]
 
-                curr_directory_name = path[-2]
-                # access the every file under the directory
-                # remove every chunkhandles in the chunkhandle_map for each file
-                for _, chunks_info in content[curr_directory_name].items():
-                    for chunk in chunks_info:
-                        del self.chunkhandle_map[chunk]
+                curr_directory_name = path[-2]                
+                # access everything under the directory
+                for data_name, data_value in list(content[curr_directory_name].items()):
+                    # if it's a file
+                    if type(data_value) == list and len(data_value) > 0:
+                        for chunk in data_value:
+                            del self.chunkhandle_map[chunk]
 
+                    # if it'd a directory call this 
+                    if type(data_value) == dict and len(data_value) > 0:
+                        sub_directory_path = path[:-1] + [data_name] + [""]
+                        self.remove(sub_directory_path)
                 # delete the directory
                 del content[path[-2]]
                 
-            # remove a whole file and remove all chunk in the chunkhandle_map according to the chunkhandle
+            # remove a file and remove all chunk in the chunkhandle_map according to the chunkhandle
             else:
                 file_name = path[-1]
                 # traverse to the parent directory of the file
@@ -251,12 +257,18 @@ if __name__ == "__main__":
     # testing
     f = FileMap()
     f.make_path("/fun/")
-    f.make_path("/fun.txt")
+    f.make_path("/fun/cs/")
+    f.make_path("/fun/cs/sss/")
+    f.make_path("/fun/cs/sss/goku.txt")
+    f.make_path("/fun/cs/test.txt")
     f.make_path("/hello.txt")
     f.add("/hello.txt", -1, "1", [1,2,3])
     f.add("/hello.txt", 0, "2", [1,2,3])
+    f.add("/fun/cs/test.txt", 1, "3", [1,2,3])
+    f.add("/fun/cs/test.txt", 2, "4", [1,2,3])
+    f.add("/fun/cs/sss/goku.txt", 3, "5", [1,2,3])
 
-    
+
     print("chunkhandle map: ", f.chunkhandle_map)
     print("metadata: ", f.files)
     # print(f.chunkhandle_map)
@@ -269,6 +281,11 @@ if __name__ == "__main__":
     print("metadata: ", f.files)
     print("\n")
 
+    f.remove("/fun/")
+    print("after remove")
+    print("chunkhandle map: ", f.chunkhandle_map)
+    print("metadata: ", f.files)
+    print("\n")
 
     """
 
