@@ -41,13 +41,14 @@ def example():
 #    else
 #        return metadata
 
-@app.route('/create/file/<string:file_path>')
+@app.route('/create/file/<path:file_path>')
 def create_file(file_path):
-    fetch_r = requests.post("http://{0}:{1}/create/file/{2}/{3}"
-                             .format(client_config["master"][0], client_config["master"][1], file_path, 0))
+    fetch_r = requests.get("http://{0}:{1}/create/file/{2}"
+                             .format(client_config["master"][0], client_config["master"][1], file_path))
 
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
-        app.logger.critical("Exception on master when creating {0}".format(file_path))
+        app.logger.critical("Exception on master when creating {0}: {1}"
+                .format(file_path, fetch_r.json()["error"]))
         abort(500)
     elif fetch_r.status_code != 200:
         app.logger.warning("Unknown error on Master when trying to create {0}".format(file_path))
