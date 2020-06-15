@@ -26,9 +26,12 @@ while True:
     except:
         state = False
 
-    heartbeat = requests.post("http://{0}:{1}".format(chunkserver_config["master"][0],
-                                                      chunkserver_config["master"][1]),
-                              json=json.dumps({"state": state}))
+    heartbeat = requests.get("http://{0}:{1}/heartbeat/{2}:{3}/{4}"
+            .format(chunkserver_config["master"][0],
+                    chunkserver_config["master"][1],
+                    chunkserver_config["chunkserver"][0],
+                    chunkserver_config["chunkserver"][1],
+                    state))
 
     time.sleep(config["HEARTBEAT_DELAY"])
 

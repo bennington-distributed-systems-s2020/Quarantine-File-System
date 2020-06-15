@@ -79,7 +79,7 @@ def create_file(new_file_path):
                     don't know the exact format yet is in the value of the key yet, need to ask
     """
     global metadata_handler
-    global live_chunk_server_set
+    global live_chunk_server_dict
     new_file_path = "/" + new_file_path
     error = {"error": "something went wrong"}
     error_invalid_path = {"error": "invalid file path"}
@@ -87,9 +87,8 @@ def create_file(new_file_path):
     error_file_exists = {"error": "file already exists"}
     json_response = {"chunk_info": None}
 
-    # print("live chunkserver set len: ", len(live_chunk_server_set))
     # check if there is any live chunkserver at all return error if none
-    if len(live_chunk_server_set) == 0:
+    if len(live_chunk_server_dict) == 0:
         return jsonify(error_no_live_chunk_server)
 
     # verify file directory
@@ -206,13 +205,13 @@ def live_server():
     """
     call this endpoint, it returns all liveserver for checking liveserver and debuging purpose.
     """
-    global live_chunk_server_set
-    dictionary = {}
-    counter = 1
-    for live_server in live_chunk_server_set:
-        dictionary[counter] = live_server
-        counter += 1
-    return jsonify(dictionary)
+    global live_chunk_server_dict
+    # dictionary = {}
+    # counter = 1
+    # for live_server in live_chunk_server_dict:
+    #     dictionary[counter] = live_server
+    #     counter += 1
+    return jsonify(live_chunk_server_dict)
 
 
 @app.route('/metadata')
