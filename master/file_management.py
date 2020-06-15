@@ -58,20 +58,27 @@ live_chunk_server_dict = {}
 
 
 def update_live_chunk_server():
+    print("hello")
     global live_chunk_server_dict
+    wait_time = 60
     while True:
-        # after 300s if chunkserver did not heartbeat master, we will remove
+        # after 60s if chunkserver did not heartbeat master, we will remove
         # the chunkserver from available chunkserver list.
         # live_chunk_server_set stored a list of tupple like: (chunkserver, datetime_heard_heartbeat)
-        sleep(300)  ####################### change it back
-        now = datetime.now()
-        to_remove_list = []
-        for chunk_server, datetime_heard_heartbeat in live_chunk_server_dict:
-            if (datetime_heard_heartbeat - now).seconds > 300:   ################change it back to 30 or 60 later
-                to_remove_list.append(chunk_server)
-        
-        for i in range(len(to_remove_list)):
-            del live_chunk_server_dict[to_remove_list[i]]
+        remove_list = []
+        sleep(wait_time)  ####################### change it back
+        for chunk_server in live_chunk_server_dict:
+            print("chunkserver: ", chunk_server)
+            time_diff = (datetime.now() - live_chunk_server_dict[chunk_server]).seconds
+            print("time_diff: ", time_diff)
+            if  time_diff > wait_time: 
+                print("passed time chunkserver: ", chunk_server)
+                remove_list.append(chunk_server)
+
+        print(remove_list)
+        print(live_chunk_server_dict)
+        for need_to_remove_chunk_server in remove_list:
+            del live_chunk_server_dict[need_to_remove_chunk_server]
         
 
 def verify_file_parent_directory_path(file_path):

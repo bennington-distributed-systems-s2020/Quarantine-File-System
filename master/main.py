@@ -16,8 +16,8 @@ from flask import Flask, jsonify
 from file_management import *
 from leases import *
 
-
 app = Flask(__name__)
+
 
 @app.route("/")
 def example():
@@ -176,8 +176,9 @@ def heartbeat(chunk_server,chunk_server_state):
                 del live_chunk_server_dict[chunk_server]
 
         elif chunk_server_state == "true":
-            # if chunk_server in live_chunk_server_set
-            live_chunk_server_set.add((chunk_server, datetime.now()))
+            # if chunk_server in live_chunk_server_dict
+            live_chunk_server_dict[chunk_server] = datetime.now()
+
         else:
             return "invalid statement"
     except:
@@ -238,8 +239,11 @@ if __name__ == "__main__":
     # output = "127.0.0.1"
     # assert lease.chunk_lease["11"]['primary'] == output, "lease grant failed"
 
+    def flask_run():
+        app.run(host='0.0.0.0')
+
     thread_update_live_server = threading.Thread(target=update_live_chunk_server) # update available chunkserver, every 30s, runs forever
-    thread_app_run = threading.Thread(target=app.run(host='0.0.0.0'))
+    thread_app_run = threading.Thread(target=flask_run)
     thread_update_live_server.start()
     thread_app_run.start()
 
