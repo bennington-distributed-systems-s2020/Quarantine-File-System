@@ -87,7 +87,7 @@ def create_file(new_file_path):
     error_file_exists = {"error": "file already exists"}
     json_response = {"chunk_info": None}
 
-    print("live chunkserver set len: ", len(live_chunk_server_set))
+    # print("live chunkserver set len: ", len(live_chunk_server_set))
     # check if there is any live chunkserver at all return error if none
     if len(live_chunk_server_set) == 0:
         return jsonify(error_no_live_chunk_server)
@@ -169,18 +169,15 @@ def heartbeat(chunk_server,chunk_server_state):
     if chunk_server == None or chunk_server_state == None:
         return str(400)
     try:
-        global live_chunk_server_set
+        global live_chunk_server_dict
         chunk_server_state = chunk_server_state.lower()
         if chunk_server_state == "false":
             # remove from the set if its been set False
-            to_remove = None
-            for chunkserver, date_time in live_chunk_server_set:
-                if chunkserver == chunk_server:
-                    to_remove = (chunkserver, date_time)
-                    break
-            live_chunk_server_set.remove(to_remove)
+            if chunk_server in live_chunk_server_dict:
+                del live_chunk_server_dict[chunk_server]
 
         elif chunk_server_state == "true":
+            # if chunk_server in live_chunk_server_set
             live_chunk_server_set.add((chunk_server, datetime.now()))
         else:
             return "invalid statement"
@@ -243,7 +240,7 @@ if __name__ == "__main__":
     # assert lease.chunk_lease["11"]['primary'] == output, "lease grant failed"
 
     thread_update_live_server = threading.Thread(target=update_live_chunk_server) # update available chunkserver, every 30s, runs forever
-    thread_app_run = threading.Thread(target=app.run)
+    thread_app_run = threading.Thread(target=app.run(host='0.0.0.0'))
     thread_update_live_server.start()
     thread_app_run.start()
 

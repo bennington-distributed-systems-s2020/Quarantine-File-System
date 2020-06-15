@@ -52,13 +52,13 @@ with open(number_of_replicas_json) as f:
 
 metadata_handler = metadata.MetadataStorage.retrieve_storage()
 
-live_chunk_server_set = set()
+live_chunk_server_dict = dict()
 
 ####################################
 
 
 def update_live_chunk_server():
-    global live_chunk_server_set
+    global live_chunk_server_dict
     while True:
         # after 300s if chunkserver did not heartbeat master, we will remove
         # the chunkserver from available chunkserver list.
@@ -66,12 +66,12 @@ def update_live_chunk_server():
         sleep(300)  ####################### change it back
         now = datetime.now()
         to_remove_list = []
-        for chunk_server, datetime_heard_heartbeat in live_chunk_server_set:
+        for chunk_server, datetime_heard_heartbeat in live_chunk_server_dict:
             if (datetime_heard_heartbeat - now).seconds > 300:   ################change it back to 30 or 60 later
-                to_remove_list.append((chunk_server, datetime_heard_heartbeat))
+                to_remove_list.append(chunk_server)
         
         for i in range(len(to_remove_list)):
-            live_chunk_server_set.remove(to_remove_list[i])
+            del live_chunk_server_dict[to_remove_list[i]]
         
 
 def verify_file_parent_directory_path(file_path):
