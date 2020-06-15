@@ -20,7 +20,7 @@ with open("chunkserver.json") as chunkserver_json:
 while True:
     state = False
     try:
-        r = requests.get("http://localhost:8000", timeout=5)
+        r = requests.get("http://localhost:8000", timeout=30)
         if r.status_code == 200:
             state = True
     except:
