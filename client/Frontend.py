@@ -54,7 +54,7 @@ def create_file(file_path):
         app.logger.warning("Unknown error on Master when trying to create {0}".format(file_path))
         abort(500)
     else:
-        return 0  # success
+        return "OK"  # success
 
 @app.route('/create/dir/<string:dir_path>')
 def create_dir(dir_path):
@@ -67,7 +67,7 @@ def create_dir(dir_path):
         app.logger.warning("Unknown error on Master when trying to create {0}".format(dir_path))
         abort(500)
     else:
-        return 0  # success
+        return "OK"  # success
 
 # Q: rewrote the spec for read. Note that the client does not have access to the metadata
 # Q: It'd have to call fetch to the Master in order to get the chunkhandle to read from
