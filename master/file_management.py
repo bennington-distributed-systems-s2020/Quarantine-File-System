@@ -58,7 +58,7 @@ live_chunk_server_dict = {}
 
 
 def update_live_chunk_server():
-    print("hello")
+    print("hello babe, im updating your live chunk_server list")
     global live_chunk_server_dict
     wait_time = 60
     while True:
@@ -68,15 +68,9 @@ def update_live_chunk_server():
         remove_list = []
         sleep(wait_time)  ####################### change it back
         for chunk_server in live_chunk_server_dict:
-            print("chunkserver: ", chunk_server)
             time_diff = (datetime.now() - live_chunk_server_dict[chunk_server]).seconds
-            print("time_diff: ", time_diff)
             if  time_diff > wait_time: 
-                print("passed time chunkserver: ", chunk_server)
                 remove_list.append(chunk_server)
-
-        print(remove_list)
-        print(live_chunk_server_dict)
         for need_to_remove_chunk_server in remove_list:
             del live_chunk_server_dict[need_to_remove_chunk_server]
         
