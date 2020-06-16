@@ -32,7 +32,8 @@ def append(chunk_handle: str, client_ip: str, data_index: str, data: str) -> int
     else:
         # use the chunk_handle, client_ip, and data_index to create the cache file
         #Q: changed some code to write data as bytes
-        with open("{0}{1}.{2}.{3}.buffer".format(config["WRITE_BUFFER_PATH"], chunk_handle, client_ip, data_index), 'wb') as buffer: # using w 'open for writing, truncating the file first' mode so writing at the same index will overwrite old buffer data
+        # using w 'open for writing, truncating the file first' mode so writing at the same index will overwrite old buffer data
+        with open("{0}{1}.{2}.{3}.buffer".format(config["WRITE_BUFFER_PATH"], chunk_handle, client_ip, data_index), 'wb+') as buffer:
             # dump the recieved data into the buffer file
             buffer.write(data)
             return 0
@@ -77,6 +78,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     #https://docs.python.org/3/library/fcntl.html#fcntl.flock
     fcntl.flock(chunk_file, fcntl.LOCK_EX)
 
+    buffer_size = 1024
     chunk_file.seek(1)
     if chunk_file.read(1) == b'\x01':
         #is primary
@@ -101,13 +103,23 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
 
             #all replicas succeeded peacefully
             #time to append
-            append_file(append_file, chunk_file)
+            while True:
+                buf = append_file.read(buffer_size)
+                if buf:
+                    chunk_file.write(buf)
+                else:
+                    break
 
         except:
             if return_code == 0:
                 return_code = 3
     else:
-        append_file(append_file, chunk_file)
+        while True:
+            buf = append_file.read(buffer_size)
+            if buf:
+                chunk_file.write(buf)
+            else:
+                break
 
     fcntl.flock(chunk_file, fcntl.LOCK_UN)
     append_file.close()
@@ -119,15 +131,4 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
         chunk_file.write(b'\x00')
 
     return return_code
-
-#support function for appending from 1 file to another
-def append_file(from_file, to_file):
-    buffer_size = 1024
-    #writing with buffer
-    #from: https://stackoverflow.com/questions/16630789/python-writing-binary-files-bytes
-    while True:
-        buf = from_file.read(buffer_size)
-        if buf:
-            to_file.write(buf)
-        else:
-            break
+    

@@ -56,10 +56,10 @@ def create_file(file_path):
     else:
         return "OK"  # success
 
-@app.route('/create/dir/<string:dir_path>')
+@app.route('/create/dir/<path:dir_path>')
 def create_dir(dir_path):
-    fetch_r = requests.post("http://{0}:{1}/create/directory/{2}"
-                             .format(client_config["master"][0], client_config["master"][1], dir_path))
+    fetch_r = requests.get("http://{0}:{1}/create/directory/{2}"
+                        .format(client_config["master"][0], client_config["master"][1], dir_path))
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
         app.logger.critical("Exception on master when creating {0}".format(dir_path))
         abort(500)
@@ -132,14 +132,14 @@ def append():
     # Pass this all to the server, get back a status, and print a message to the user
     # parsing json
     request_json = request.get_json()
-    file_name = request_json["file_name"]
+    file_path = request_json["file_path"]
     content = request_json["content"]
 
     # Call fetch on Master to get the primary and the replicas
     fetch_r = requests.get("http://{0}:{1}/fetch/{2}/{3}"
-                            .format(client_config["master"][0], client_config["master"][1], file_path, "a"))
+                            .format(client_config["master"][0], client_config["master"][1], file_path, "a"), timeout = 10)
     # see API doc for return format
-    append_chunk = fetch_r.json()[0]  # if fetch was done correctly this should just have 1 chunk in the list
+    append_chunk = fetch_r.json()[file_path]  # if fetch was done correctly this should just have 1 chunk in the list
 
     # call append
     return_tuple = client_append.append(append_chunk, content)
@@ -163,4 +163,4 @@ def append():
             append_chunk["primary"]))
         abort(400)
     else:
-        return 0  # success
+        return "OK"  # success
