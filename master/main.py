@@ -207,11 +207,6 @@ def live_server():
     call this endpoint, it returns all liveserver for checking liveserver and debuging purpose.
     """
     global live_chunk_server_dict
-    # dictionary = {}
-    # counter = 1
-    # for live_server in live_chunk_server_dict:
-    #     dictionary[counter] = live_server
-    #     counter += 1
     return jsonify(live_chunk_server_dict)
 
 
