@@ -28,8 +28,8 @@ def example():
 # you get all chunk info for the file. slice it up from there. return json
 
 # need to reform this function so that chunkserver can call and create new chunks or files
-@app.route('/fetch/<path:file_path>/<string:command>', methods=['GET'])
-@app.route('/fetch/<path:file_path>/<string:command>/<int:chunk_index>', methods=['GET'])
+@app.route('/fetch/<path:file_path>/<string:command>', methods=['GET', 'POST'])
+@app.route('/fetch/<path:file_path>/<string:command>/<int:chunk_index>', methods=['GET', 'POST'])
 def fetch(file_path, command, chunk_index=None):
     """
     Caller: Client
@@ -58,8 +58,17 @@ def fetch(file_path, command, chunk_index=None):
     
     # return the last chunk of the file
     elif command == "a":
+        global lease
         chunk_info = metadata_handler.get_chunk(file_path)[-1]
-        json_response[file_path] = chunk_info
+        
+        # get chunk handle 
+        chunk_handle = chunk_info[0]
+
+        # grant lease
+        output = lease.grant_lease(chunk_handle)
+
+        json_response[file_path] = output
+
         return jsonify(json_response) # return json packaged chunk info
     
     # ac (append create). 
@@ -105,6 +114,16 @@ def create_file(new_file_path):
             return jsonify(error_no_live_chunk_server)
 
         json_response["chunk_info"] = result
+
+        # get chunk handle 
+        chunk_handle = result[0]
+        replicas = result[2]
+
+        # create the file on all the chunkservers
+        json_chunk_handle = {"chunk_handle": chunk_handle}
+        for replica in replicas:
+            r = requests.post("http://{0}/create".format(replica), json = json_chunk_handle)
+            
         return jsonify(json_response)
     except:
         if metadata_handler.verify_path(new_file_path) == True:
