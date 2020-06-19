@@ -71,7 +71,7 @@ def create_dir(dir_path):
 
 # Q: rewrote the spec for read. Note that the client does not have access to the metadata
 # Q: It'd have to call fetch to the Master in order to get the chunkhandle to read from
-@app.route('/read/<string:file_name>,<int:start_byte>,<int:byte_range>', methods=['GET'])
+@app.route('/read/<path:file_path>/<int:start_byte>/<int:byte_range>', methods=['GET'])
 def read(file_path, start_byte, byte_range):
     """
     Reads out the requested file from the chunkserver
@@ -96,10 +96,10 @@ def read(file_path, start_byte, byte_range):
         chunks_list = fetch_r.json()
         output = ""
         for chunk in chunks_list:
-            primary = chunk["primary"]
-            chunk_handle = chunk["chunk_handle"]
+            address = chunk[2][0]
+            chunk_handle = chunk[0]
             #this will break on large files since there's no startbyte calculation
-            read_r = requests.get("http://{0}/read".format(primary),
+            read_r = requests.get("http://{0}/read".format(address),
                     json={"chunk_handle": chunk_handle, "start_byte": start_byte, "byte_range": byte_range})
             output += read_r.json()
 
@@ -146,9 +146,9 @@ def append():
     return_code = return_tuple[0]
     # if we have to append again on a new chunk
     if return_code == 301:
-        fetch_r = requests.get("http://{0}:{1}/fetch/{2}/{3}"
-                                .format(client_config["master"][0], client_config["master"][1], file_path, "a"))
-        new_append_chunk = fetch_new_r.json()[0]
+        fetch_new_r = requests.get("http://{0}:{1}/fetch/{2}/{3}"
+                                .format(client_config["master"][0], client_config["master"][1], file_path, "ac"))
+        new_append_chunk = fetch_new_r.json()[file_path]
         # call the append function again on the new chunk
         return_code = client_append.append(new_append_chunk, return_tuple[1])
 

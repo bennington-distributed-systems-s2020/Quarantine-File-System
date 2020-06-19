@@ -28,14 +28,14 @@ def append(chunk_handle: str, client_ip: str, data_index: str, data: str) -> int
     #Q: experimental conversaion of bytes encoded as a string using base64
     data = base64.decodebytes(data.encode())
     if len(data) > config["MAX_APPEND_LIMIT"]:
-        return 1 # The operation failed because bytes > MAX_APPEND_LIMIT
+        print(1)
     else:
         # use the chunk_handle, client_ip, and data_index to create the cache file
         #Q: changed some code to write data as bytes
         # using w 'open for writing, truncating the file first' mode so writing at the same index will overwrite old buffer data
-        with open("{0}{1}.{2}.{3}.buffer".format(config["WRITE_BUFFER_PATH"], chunk_handle, client_ip, data_index), 'wb+') as buffer:
+        with open("{0}{1}.{2}.{3}.buffer".format(config["WRITE_BUFFER_PATH"], chunk_handle, client_ip, data_index), 'wb+') as buf:
             # dump the recieved data into the buffer file
-            buffer.write(data)
+            buf.write(data)
             return 0
     return 2 # ya--- idk
 
@@ -63,7 +63,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
         return 1
 
     #check if write could be performed
-    remaining_size = config["CHUNK_SIZE"] - os.path.getsize(chunk_filename)
+    remaining_size = config["CHUNK_SIZE"] - os.path.getsize(chunk_filename) + 9
     if os.path.getsize(buffer_filename) > remaining_size:
         os.remove(buffer_filename)
         return 2
@@ -131,4 +131,3 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
         chunk_file.write(b'\x00')
 
     return return_code
-    

@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def example():
-    return "Chunkserver Flask API!"
+    return jsonify(1)
 
 @app.route("/create/", strict_slashes=False, methods=['GET', 'POST'])
 def create():
@@ -109,7 +109,7 @@ def read():
         byte_range = request_json['byte_range']
         b64_encoded_return_bytes = ""
 
-        with open(config["CHUNK_PATH"] + chunk_handle + '.chunk') as c_file:
+        with open(config["CHUNK_PATH"] + chunk_handle + '.chunk', "rb") as c_file:
             c_file.seek(start_byte + 9) #9 first information bytes
             return_bytes = c_file.read(byte_range)
             b64_encoded_return_bytes = base64.b64encode(return_bytes).decode()
