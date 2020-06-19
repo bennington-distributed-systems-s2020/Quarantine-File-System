@@ -42,8 +42,10 @@ def fetch(file_path, command, chunk_index=None):
                 if fails: return error in json format {"error": "error messagesss"}
     """
     global metadata_handler
+    global lease
     file_path = "/" + file_path
     error = {"error": "invalid file path"}
+    error_no_available_chunkserver = {"error": "no available chunkserver, please try later"}
     json_response = {}
 
     if metadata_handler.verify_path(file_path) == False:
@@ -53,12 +55,10 @@ def fetch(file_path, command, chunk_index=None):
     if command == "r":
         # since this function takes a list of index, so I used [chunk_index] to make it a list
         chunk_info = metadata_handler.get_chunk(file_path)
-        json_response[file_path] = chunk_info
-        return jsonify(json_response)
+        return jsonify(chunk_info)
     
     # return the last chunk of the file
     elif command == "a":
-        global lease
         chunk_info = metadata_handler.get_chunk(file_path)[-1]
         
         # get chunk handle 
@@ -75,7 +75,27 @@ def fetch(file_path, command, chunk_index=None):
     # Create a new empty chunk for that file then return the address for that chunk.
     elif command == "ac":
         chunk_info = create_new_chunk(file_path)
-        json_response[file_path] = chunk_info
+        
+        if chunk_info == "invalid path":
+            return jsonify(error)
+        elif chunk_info == "no available chunkserver":
+            return jsonify(error_no_available_chunkserver)
+        
+        # get chunk handle 
+        chunk_handle = chunk_info[0]
+        replicas = chunk_info[2]
+
+        # create the file on all the chunkservers
+        json_chunk_handle = {"chunk_handle": chunk_handle}
+        for replica in replicas:
+            r = requests.post("http://{0}/create".format(replica), json = json_chunk_handle)
+
+        # grant lease to one of the server as primary
+        output = lease.grant_lease(chunk_handle)
+        json_response[file_path] = output
+
+        print("new chunk with chunkhandle: {1} for file: '{0}' is created".format(file_path, chunk_handle))
+        print("returned value: ", json_response)
         return jsonify(json_response)
 
 @app.route('/create/file/<path:new_file_path>', methods = ['GET'])
@@ -123,7 +143,7 @@ def create_file(new_file_path):
         json_chunk_handle = {"chunk_handle": chunk_handle}
         for replica in replicas:
             r = requests.post("http://{0}/create".format(replica), json = json_chunk_handle)
-            
+        print("file: {0} with chunkhandle: {1} is created".format(new_file_path, chunk_handle))
         return jsonify(json_response)
     except:
         if metadata_handler.verify_path(new_file_path) == True:

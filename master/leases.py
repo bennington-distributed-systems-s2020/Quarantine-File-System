@@ -55,7 +55,9 @@ class Lease:
                 r = requests.post("http://{0}/lease-grant/".format(chunk_server_addr), json = json_chunk_info)
 
                 if r.status_code == 200:
-                    ############## need to update chunk size 
+                    
+                    # update chunk size
+                    metadata_handler.store.chunkhandle_map[chunk_handle][0] = r.json()
                     print("got 200 response")
                     return json_chunk_info
                 else:

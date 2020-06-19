@@ -146,7 +146,7 @@ def create_new_chunk(file_path):
 
     # make sure the file is valid
     if metadata_handler.verify_path(file_path) == False:
-        return False
+        return "invalid path"
     
     # get random chunkservers list to store the chunk
     new_chunk_hundle = metadata_handler.get_chunk_handle() 
@@ -156,7 +156,7 @@ def create_new_chunk(file_path):
 
     # verify random_chunk_server_list return False it's there is no live server in it
     if random_chunk_server_list == False or len(random_chunk_server_list) == 0:
-        return False
+        return "no available chunkserver"
 
     # create new chunk for chunkservers on the random list
     metadata_handler.create_chunk(file_path, new_chunk_hundle, random_chunk_server_list)
