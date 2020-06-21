@@ -202,10 +202,11 @@ def get_servers_list_that_stores_new_file(live_servers_tuple_dict, number_of_rep
     live_servers_num = len(live_servers_tuple_dict)
     live_server_list = []
     random_server_list = []
+    random_int_list = []
     if live_servers_num <= 0:
         return False
     
-    if live_servers_num < number_of_replicas:
+    if live_servers_num <= number_of_replicas:
         counter = live_servers_num
         for chunk_server in live_servers_tuple_dict.keys():
             if counter == 0:
@@ -219,6 +220,8 @@ def get_servers_list_that_stores_new_file(live_servers_tuple_dict, number_of_rep
             
         for _ in range(number_of_replicas):
             randomNum = randint(0,live_servers_num-1)
+            while randomNum in random_int_list:
+                randomNum = randint(0,live_servers_num-1)
             random_server_list.append(live_server_list[randomNum])
         return random_server_list
 
