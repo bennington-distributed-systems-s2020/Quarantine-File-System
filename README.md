@@ -14,7 +14,7 @@ The client is the entrypoint for interaction with the file system. The basic fun
 
 ```
 http://{client_ip_addr}/create/file/<file_path>
-http://{client_ip_addr}/create/dir/<file_path>
+http://{client_ip_addr}/create/dir/<file_path>/
 ```
 
 **Read**: Call the client with an HTTP GET request formatted as such to read from a file starting from *start_byte* over the range of *byte_range*
