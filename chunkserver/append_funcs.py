@@ -60,6 +60,8 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     try:
         append_file = open(buffer_filename, 'rb')
     except:
+        print("buffer not found")
+        print(buffer_filename)
         return 1
 
     #check if write could be performed
