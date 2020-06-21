@@ -65,13 +65,7 @@ def fetch(file_path, command, chunk_index=None):
         # get chunk handle 
         chunk_handle = chunk_info[0]
 
-        # check if the chunk already got a primary in lease, if yes, just return it, if no grant
-        # grant lease to one of othe replicas
-        ##################3
-
-
-
-        # grant lease
+        # grant lease or get lease info
         output = lease.grant_lease(chunk_handle)
 
         json_response[file_path] = output
