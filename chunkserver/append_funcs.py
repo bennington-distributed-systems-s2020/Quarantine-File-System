@@ -89,6 +89,8 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
                 replica_json = json.load(f)
                 replicas = replica_json[chunk_handle]
 
+            print(replicas)
+
             #sending requests to replicas
             #possible improvement: multithread this
             for i in replicas:
@@ -101,6 +103,8 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
                     raise
                 else:
                     continue
+
+                print(append_request.status_code)
 
             #all replicas succeeded peacefully
             #time to append
