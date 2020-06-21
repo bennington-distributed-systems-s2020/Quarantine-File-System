@@ -94,7 +94,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
             #sending requests to replicas
             #possible improvement: multithread this
             for i in replicas:
-                append_request = requests.post("http://{0}/append-request".format(i), json={'chunk_handle': chunk_handle, 'data_index': data_index})
+                append_request = requests.post("http://{0}/append-request".format(i), json={'chunk_handle': chunk_handle, 'ip_addr': client_ip, 'data_index': data_index})
                 print(append_request.status_code)
                 if append_request.status_code != 200:
                     return_code = 3
@@ -118,6 +118,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
             traceback.print_exc()
             if return_code == 0:
                 return_code = 3
+            print(return_code)
     else:
         print("am replica")
         while True:

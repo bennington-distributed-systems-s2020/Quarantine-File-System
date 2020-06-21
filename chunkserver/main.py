@@ -149,7 +149,13 @@ def append_request():
     # return int
     request_json = request.get_json()
     try:
-        return jsonify(append_funcs.append_request(request_json['chunk_handle'], request.remote_addr, request_json['data_index']))
+        #if ipaddr is in request this means the append request is from a primary
+        #esle it is from a client
+        if "ip_addr" in request_json:
+            ip_addr = request_json["ip_addr"]
+        else:
+            ip_addr = request.remote_addr
+        return jsonify(append_funcs.append_request(request_json['chunk_handle'], ip_addr, request_json['data_index']))
     except (KeyError, IOError, OSError) as e:
         app.logger.warning("File {0} not found.".format(request_json['chunk_handle']), exc_info = True)
         abort(400)
