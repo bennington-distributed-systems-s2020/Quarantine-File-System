@@ -82,6 +82,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     chunk_file.seek(1)
     if chunk_file.read(1) == b'\x01':
         #is primary
+        print("am primary")
         try:
             #getting replicas
             with open('./replica.json', 'r+') as f:
@@ -114,6 +115,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
             if return_code == 0:
                 return_code = 3
     else:
+        print("am replica")
         while True:
             buf = append_file.read(buffer_size)
             if buf:
