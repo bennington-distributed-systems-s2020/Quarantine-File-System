@@ -9,7 +9,7 @@ Editted to heartbeat.py by Quang Tran 05 23 20 mm dd yy
 '''
 
 #from threading import Thread
-import time, json, requests
+import time, json, requests, traceback
 
 with open("config.json") as config_json:
     config = json.load(config_json)
@@ -27,11 +27,12 @@ while True:
         state = False
 
     try:
-        heartbeat = requests.get("http://{0}:{1}/heartbeat/{4}"
+        heartbeat = requests.get("http://{0}:{1}/heartbeat/{2}"
                 .format(chunkserver_config["master"][0],
                         chunkserver_config["master"][1],
                         state))
     except:
+        traceback.print_exc()
         print("Master is currently down")
 
     time.sleep(config["HEARTBEAT_DELAY"])
