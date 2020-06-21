@@ -1,6 +1,6 @@
 # Quarantine Files System (QFS)
 
-This is a basic implementation of the Google File System (GFS), built using Python and the Requests library as the finals project for the Spring 2020 CS4280.01 Distributed Systems course taught by Prof. Andrew Cencini. The original GFS paper could be found [here.](https://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf)
+This is a basic implementation of the Google File System (GFS), built by the Spring 2020 CS4280.01 Distributed Systems class taught by Prof. Andrew Cencini using Python and the Requests library as the finals project for the course. The original GFS paper could be found [here.](https://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf)
 
 The current build supports the basic commands of creating a file and directory, appending bytes to the files and reading from them, and has been tested to work smoothly in a setup consisting of 1 Master, 1 Client and 3 Chunkservers running concurrently on AWS.
 
