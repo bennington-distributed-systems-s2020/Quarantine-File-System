@@ -127,9 +127,4 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     append_file.close()
     chunk_file.close()
 
-    #take off lease
-    with open(chunk_filename, 'rb+') as chunk_file:
-        chunk_file.seek(1)
-        chunk_file.write(b'\x00')
-
     return return_code
