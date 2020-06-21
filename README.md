@@ -144,3 +144,135 @@ Return: int. An int denoting the status of the request.
 2: The operation failed because bytes > The amount of space left on the chunk.
 3: The operation failed for other reasons.
 ```
+# Master
+Communication Tool: Flask
+Port: 5000
+
+Description: 
+
+Master's three main purposes.
+a. to store and manage metadata in memory. 
+b. to keep track of all available chunkserver for file operation on chunkserver purpose(via heartbeat and update_live_chunk_server function).
+c. to return requested(specific) metadata for the client and chunkserver for file operation.
+
+# components:
+
+chunk_handle: 
+type: str
+description: chunk handle is the ID(name) of a chunk. The first chunk ever being created will be "1", the next one will be "2" and so on.
+It starts from 1, increment by 1 everytime a new chunk is created.
+
+metadata: 
+type: dict
+Description: A folder will be stored as a dict {}.
+A file will be stored with a list of "chunk_handle"
+
+sample_metadata:
+{
+    "root": {
+        "fun.txt(this is a file)": ["chunkhandle1", "chunkhandle2", "chunkhandle3", "chunkhandle4", "chunkhandle5"]
+
+        "myData(this is a directory)": {
+            "hello.txt": [...]
+            ...
+        }
+    }
+}
+
+chunkinfo:
+Description: It's designed for fast retireve of chunk_infomation according to chunk_handle
+type: dict
+
+sample_chunkinfo: 
+{
+    "chunk_handle1": ["chunk_size", ["chunkreplica1", "chunkreplica2", "chunkreplica3"]],
+    "chunk_handle2": ["chunk_size", ["chunkreplica1", "chunkreplica2", "chunkreplica3"]],
+    "chunk_handle3": ["chunk_size", ["chunkreplica1", "chunkreplica2", "chunkreplica3"]],
+    "chunk_handle4": ["chunk_size", ["chunkreplica1", "chunkreplica2", "chunkreplica3"]],
+    ...
+}
+
+# Master Usage
+root path: "/"
+If my ip addr is: 127.0.0.1
+my port is 5000 mentioned above.
+
+
+1. Heartbeat endpoint. 
+Caller: chunkserver
+
+In order to create a file/chunk on the chunkserver, we need to have chunkserver in available chunkserver list.
+chunkserver will call master's end point every 60 seconds to inform the master that the chunkserver is available.
+
+* to use hearbeat, chunkserver just need to call the link below.
+http://127.0.0.1:5000/heartbeat/true
+
+
+2. The client can call master to "create/remove directory" and "create/remove file". 
+Caller: client
+
+eg: 
+* To create/remove a new file named "fun.txt"
+http://127.0.0.1:5000/create(remove)/file/fun.txt
+
+* To create/remove a new directory named myData under root.
+http://127.0.0.1:5000/create(remove)/directory/mydata/
+
+* To create/remove a new directory named school under directory "mydata"
+http://127.0.0.1:5000/create(remove)/directory/mydata/school/
+
+
+
+3. debugging helper endpoint. 
+Caller: developer
+
+* to get liveserver/available chunkserver
+http://127.0.0.1:5000/liveserver
+
+* to get metadata of files
+http://127.0.0.1:5000/metadata
+
+* to get all the information for all the chunkinfo
+http://127.0.0.1:5000/chunkinfo
+
+
+
+4. Fetch endpoint for retrieve metadata or create new chunk. 
+"fetch/<path:file_path>/<string:command>"
+Caller: Client or Chunkserver
+
+command: 
+"r": "r means read". It returns all chunkhandles for the file
+"a": "a means append".  It returns the chunkhandle of the latest chunk of a file with "assigned primary, replicas, timestamps information"
+"ac": "ac means accpend & create". It returns a new created chunk's info formated the same way as command "a"
+
+
+* get all chunkhandles of a file called "fun.txt" under the root directory
+http://127.0.0.1:5000/fetch/fun.txt/r
+
+* get all chunkhandles of a file called "hello.txt" under the directory called "myData"
+http://127.0.0.1:5000/fetch/myData/hello.txt/r
+
+
+* get the last chunk's info for "hello.txt" under the directory called "myData"
+
+http://127.0.0.1:5000/fetch/myData/hello.txt/a
+
+
+* create a new chunk for "hello.txt" under the directory called "myData", and return the chunk's info
+
+http://127.0.0.1:5000/fetch/myData/hello.txt/ac
+
+
+
+# possible improvement and TODO
+1. checkpoint functionality integration
+2. fault-tolerence & redundancy development & integration
+3. garbage collection development & integration
+4. make this program support multiclient 
+5. security improvement
+6. customize the data format being send and how it should be read
+
+# Notice:
+QFS is fully capable of appending data to all the chunk_replicas of a chunk.
+It's possible to customize the format of the data to append and how it should be read.
