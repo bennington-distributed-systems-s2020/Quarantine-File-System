@@ -27,11 +27,9 @@ while True:
         state = False
 
     try:
-        heartbeat = requests.get("http://{0}:{1}/heartbeat/{2}:{3}/{4}"
+        heartbeat = requests.get("http://{0}:{1}/heartbeat/{4}"
                 .format(chunkserver_config["master"][0],
                         chunkserver_config["master"][1],
-                        chunkserver_config["chunkserver"][0],
-                        chunkserver_config["chunkserver"][1],
                         state))
     except:
         print("Master is currently down")
