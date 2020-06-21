@@ -1,7 +1,7 @@
 #append_funcs.py - implementation of commands for appending
 #Quang Tran - 05 20 20 mm dd yy
 
-import os, datetime, random, math, json, logging, fcntl, base64
+import os, datetime, random, math, json, logging, fcntl, base64, requests, traceback
 import dateutil.parser
 
 with open("config.json") as config_json:
@@ -95,6 +95,7 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
             #possible improvement: multithread this
             for i in replicas:
                 append_request = requests.post("http://{0}/append-request".format(i), json={'chunk_handle': chunk_handle, 'data_index': data_index})
+                print(append_request.status_code)
                 if append_request.status_code != 200:
                     return_code = 3
                     raise
@@ -103,8 +104,6 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
                     raise
                 else:
                     continue
-
-                print(append_request.status_code)
 
             #all replicas succeeded peacefully
             #time to append
@@ -115,7 +114,8 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
                 else:
                     break
 
-        except:
+        except Exception as e:
+            traceback.print_exc()
             if return_code == 0:
                 return_code = 3
     else:
