@@ -12,7 +12,7 @@
 """
 
 import threading
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from file_management import *
 from leases import *
 
@@ -55,6 +55,7 @@ def fetch(file_path, command, chunk_index=None):
     if command == "r":
         # since this function takes a list of index, so I used [chunk_index] to make it a list
         chunk_info = metadata_handler.get_chunk(file_path)
+        print(chunk_info)
         return jsonify(chunk_info)
     
     # return the last chunk of the file
@@ -64,11 +65,12 @@ def fetch(file_path, command, chunk_index=None):
         # get chunk handle 
         chunk_handle = chunk_info[0]
 
-        # grant lease
+        # grant lease or get lease info
         output = lease.grant_lease(chunk_handle)
 
         json_response[file_path] = output
-
+        print(json_response)
+        print("grant success!")
         return jsonify(json_response) # return json packaged chunk info
     
     # ac (append create). 
@@ -158,16 +160,26 @@ def create_directory(new_directory_path):
     :return: json file. if success, return {"success": "directory created"}
                     if failed, return {"error": "parent directory does not exist"}
     """
-    new_directory_path = "/" + new_directory_path
-    print("new directory path: ", new_directory_path)
-    error = {"error": "invalid path"}
-    success = {"success": "directory created"}
-    output = create_new_directory(new_directory_path)
-    if output == False:
+    try:
+        new_directory_path = "/" + new_directory_path
+        print("new directory path: ", new_directory_path)
+        error = {"error": "invalid path"}
+        success = {"success": "directory created"}
+        output = create_new_directory(new_directory_path)
+        if output == "directory already exists":
+            error["error"] = "directory already exists"
+            return jsonify(error)
+        elif output == "invalid path":
+            return jsonify(error)
+        elif output == "directory already exists":
+            error["error"] = "directory already exists"
+            return jsonify(error)
+        else:
+            return jsonify(success)
+    except:
+        error["error"] = "something went wrong"
         return jsonify(error)
-    else:
-        return jsonify(success)
-
+        
 @app.route('/remove/file/<path:file_path>')
 def to_remove_file(file_path):
     file_path = "/" + file_path
@@ -196,14 +208,16 @@ def to_remove_directory(directory_path):
     except:
         return jsonify(error)    
 
-@app.route('/heartbeat/<string:chunk_server>/<string:chunk_server_state>', methods=['GET'])
-def heartbeat(chunk_server,chunk_server_state):
+@app.route('/heartbeat/<string:chunk_server_state>', methods=['GET'])
+def heartbeat(chunk_server_state):
     """
     Caller: Chunkserver
     :param chunk_server_ip: chunk_server_ip/dns
     :param chunk_server_state: string, True(chunk server is available), False(unavailable) 
     :return: status code 200 means"OK"; code 500 means "error" ; code 400 means invalid inputs
     """
+    default_chunk_server_port = 8000
+    chunk_server = request.remote_addr + ":" + str(default_chunk_server_port)
     if chunk_server == None or chunk_server_state == None:
         return str(400)
     try:

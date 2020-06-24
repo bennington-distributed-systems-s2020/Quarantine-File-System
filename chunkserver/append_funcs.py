@@ -1,7 +1,7 @@
 #append_funcs.py - implementation of commands for appending
 #Quang Tran - 05 20 20 mm dd yy
 
-import os, datetime, random, math, json, logging, fcntl, base64
+import os, datetime, random, math, json, logging, fcntl, base64, requests, traceback
 import dateutil.parser
 
 with open("config.json") as config_json:
@@ -60,6 +60,8 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     try:
         append_file = open(buffer_filename, 'rb')
     except:
+        print("buffer not found")
+        print(buffer_filename)
         return 1
 
     #check if write could be performed
@@ -82,16 +84,20 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     chunk_file.seek(1)
     if chunk_file.read(1) == b'\x01':
         #is primary
+        print("am primary")
         try:
             #getting replicas
             with open('./replica.json', 'r+') as f:
                 replica_json = json.load(f)
                 replicas = replica_json[chunk_handle]
 
+            print(replicas)
+
             #sending requests to replicas
             #possible improvement: multithread this
             for i in replicas:
-                append_request = requests.post("http://{0}/append-request".format(i), json={'chunk_handle': chunk_handle, 'data_index': data_index})
+                append_request = requests.post("http://{0}/append-request".format(i), json={'chunk_handle': chunk_handle, 'ip_addr': client_ip, 'data_index': data_index})
+                print(append_request.status_code)
                 if append_request.status_code != 200:
                     return_code = 3
                     raise
@@ -110,10 +116,13 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
                 else:
                     break
 
-        except:
+        except Exception as e:
+            traceback.print_exc()
             if return_code == 0:
                 return_code = 3
+            print(return_code)
     else:
+        print("am replica")
         while True:
             buf = append_file.read(buffer_size)
             if buf:
@@ -124,10 +133,5 @@ def append_request(chunk_handle: str, client_ip: str, data_index: str) -> int:
     fcntl.flock(chunk_file, fcntl.LOCK_UN)
     append_file.close()
     chunk_file.close()
-
-    #take off lease
-    with open(chunk_filename, 'rb+') as chunk_file:
-        chunk_file.seek(1)
-        chunk_file.write(b'\x00')
 
     return return_code
