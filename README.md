@@ -31,14 +31,16 @@ http://{client_ip_addr}/read/<file_path>/<start_byte>/<byte_range>
 
 Note that start_byte has no functionality in this build, and is defaulted to start from 0. Implementing start byte calculation would not be hard, but seems superfluous for what essentially is a proof of concept.
 
-**Append**: Call the client with an HTTP POST request along with a JSON formatted as such to append to a file
+**Append**: Call the client with an HTTP POST request along with a JSON formatted as such to append to a file.
+
+Note that for file_path you need to add a "/" at the beginning of all paths.
 
 ```
 http://{client_ip_addr}/append
 ```
 ```
 {
-  "file_path": <path of file to append>
+  "file_path": </path of file to append>
   "content": <content to append to file encoded using Base64 encoding>
 }
 ```
