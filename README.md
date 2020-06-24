@@ -10,6 +10,12 @@ The current build supports the basic commands of creating a file and directory, 
 
 The client is the entrypoint for interaction with the file system. The basic functionalities could be used as follows:
 
+**Metadata**: Call the client with an HTTP GET request formatted as such to display the current metadata of the server
+
+```
+http://{client_ip_addr}/metadata
+```
+
 **Create**: Call the client with an HTTP GET request formatted as such to create an empty file and empty directory respectively.
 
 ```
