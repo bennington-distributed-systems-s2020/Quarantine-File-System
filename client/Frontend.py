@@ -7,7 +7,7 @@
 # Edited again by Roxy 5/26/20
 #
 
-from flask import Flask, json, jsonify, abort, request
+from flask import Flask, json, jsonify, abort, request, Response
 import requests
 import client_append
 import logging
@@ -41,15 +41,21 @@ def example():
 #    else
 #        return metadata
 
+@app.route('/metadata', strict_slashes=False)
+def metadata():
+    #display metadata
+    r = requests.get("http://{0}:{1}/metadata"
+                     .format(client_config["master"][0], client_config["master"][1]))
+    return r.json()
+
 @app.route('/create/file/<path:file_path>')
 def create_file(file_path):
     fetch_r = requests.get("http://{0}:{1}/create/file/{2}"
                              .format(client_config["master"][0], client_config["master"][1], file_path))
 
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
-        app.logger.critical("Exception on master when creating {0}: {1}"
-                .format(file_path, fetch_r.json()["error"]))
-        abort(500)
+        return Response("Exception on master when creating {0}: {1}"
+                .format(file_path, fetch_r.json()["error"]), status=500)
     elif fetch_r.status_code != 200:
         app.logger.warning("Unknown error on Master when trying to create {0}".format(file_path))
         abort(500)
@@ -61,8 +67,8 @@ def create_dir(dir_path):
     fetch_r = requests.get("http://{0}:{1}/create/directory/{2}"
                         .format(client_config["master"][0], client_config["master"][1], dir_path))
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
-        app.logger.critical("Exception on master when creating {0}".format(dir_path))
-        abort(500)
+        return Response("Exception on master when creating {0}: {1}"
+                .format(dir_path, fetch_r.json()["error"]), status=500)
     elif fetch_r.status_code != 200:
         app.logger.warning("Unknown error on Master when trying to create {0}".format(dir_path))
         abort(500)
@@ -86,8 +92,8 @@ def read(file_path, start_byte, byte_range):
     fetch_r = requests.get("http://{0}:{1}/fetch/{2}/{3}/{4}"
                             .format(client_config["master"][0], client_config["master"][1], file_path, "r", 0))
     if fetch_r.status_code == 500 or ("error" in fetch_r.json()):
-        app.logger.critical("Exception on master when reading {0}".format(file_path))
-        abort(500)
+        return Response("Exception on master when reading {0}: {1}"
+                .format(file_path, fetch_r.json()["error"]), status=500)
     elif fetch_r.status_code != 200:
         app.logger.warning("Unknown error on Master when trying to read {0}".format(file_path))
         abort(500)
@@ -101,6 +107,7 @@ def read(file_path, start_byte, byte_range):
             #this will break on large files since there's no startbyte calculation
             read_r = requests.get("http://{0}/read".format(address),
                     json={"chunk_handle": chunk_handle, "start_byte": start_byte, "byte_range": byte_range})
+            print(output)
             output += read_r.json()
 
         return output
