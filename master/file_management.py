@@ -126,15 +126,19 @@ def create_new_directory(directory_path):
 
     # check if the input is a directory path or not by checking the ending
     if directory_path.split('/')[-1] != '':
-        return False
+        return "invalid path"
 
     # get parent directory of the directoy path we creating.
     parent_directory_path = '/'.join(directory_path.split('/')[:-2]) + '/'
 
     # verify parent directory
     if metadata_handler.verify_path(parent_directory_path) == False:
-        return False
+        return "parent directory does not exist"
     
+    # verify if directory already exists
+    if metadata_handler.verify_path(directory_path) == True:
+        return "directory already exists"
+
     # if valid, add the new directory in the metadata
     result = metadata_handler.create_path(directory_path)
     return result

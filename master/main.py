@@ -160,16 +160,26 @@ def create_directory(new_directory_path):
     :return: json file. if success, return {"success": "directory created"}
                     if failed, return {"error": "parent directory does not exist"}
     """
-    new_directory_path = "/" + new_directory_path
-    print("new directory path: ", new_directory_path)
-    error = {"error": "invalid path"}
-    success = {"success": "directory created"}
-    output = create_new_directory(new_directory_path)
-    if output == False:
+    try:
+        new_directory_path = "/" + new_directory_path
+        print("new directory path: ", new_directory_path)
+        error = {"error": "invalid path"}
+        success = {"success": "directory created"}
+        output = create_new_directory(new_directory_path)
+        if output == "directory already exists":
+            error["error"] = "directory already exists"
+            return jsonify(error)
+        elif output == "invalid path":
+            return jsonify(error)
+        elif output == "directory already exists":
+            error["error"] = "directory already exists"
+            return jsonify(error)
+        else:
+            return jsonify(success)
+    except:
+        error["error"] = "something went wrong"
         return jsonify(error)
-    else:
-        return jsonify(success)
-
+        
 @app.route('/remove/file/<path:file_path>')
 def to_remove_file(file_path):
     file_path = "/" + file_path
